@@ -1,0 +1,3072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>ICT Gold Bot Pro</title>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#f0b90b"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --gold:#f0b90b;--gold2:#ffd700;--gold3:#c8860a;
+  --bg:#080808;--bg2:#0f0f0f;--bg3:#161616;--bg4:#1e1e1e;
+  --border:#242424;--border2:#2e2e2e;
+  --green:#00e676;--red:#ff3d57;--blue:#4fc3f7;
+  --text:#f0f0f0;--text2:#aaa;--text3:#555;
+  --font:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace;--display:'Bebas Neue',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:var(--font);color:var(--text);display:flex;flex-direction:column}
+
+/* ── Top Bar ── */
+#topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);
+  flex-shrink:0;position:relative;z-index:10
+}
+#topbar h1{font-family:var(--display);font-size:1.4rem;letter-spacing:2px;
+  background:linear-gradient(135deg,var(--gold2),var(--gold),var(--gold3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#connStatus{display:flex;align-items:center;gap:6px;font-size:0.7rem;color:var(--text3)}
+#connDot{width:8px;height:8px;border-radius:50%;background:var(--text3);transition:all .3s}
+#connDot.on{background:var(--green);box-shadow:0 0 8px var(--green)}
+#connDot.err{background:var(--red);box-shadow:0 0 8px var(--red)}
+#modePill{font-size:0.65rem;padding:2px 8px;border-radius:20px;
+  background:rgba(240,185,11,.15);color:var(--gold);border:1px solid rgba(240,185,11,.3);
+  display:none;margin-left:6px}
+
+/* ── Price Ticker ── */
+#ticker{
+  background:linear-gradient(90deg,var(--bg2),var(--bg3),var(--bg2));
+  border-bottom:1px solid var(--border);padding:8px 14px;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0
+}
+#priceMain{font-family:var(--display);font-size:2rem;letter-spacing:1px;color:var(--gold2)}
+#priceSub{font-size:0.65rem;color:var(--text3);text-align:right;font-family:var(--mono)}
+#priceChange{font-size:0.75rem;font-weight:600;padding:3px 8px;border-radius:6px;margin-left:8px}
+#priceChange.up{background:rgba(0,230,118,.15);color:var(--green)}
+#priceChange.dn{background:rgba(255,61,87,.15);color:var(--red)}
+
+/* ── Nav Tabs ── */
+#nav{
+  display:flex;background:var(--bg2);border-bottom:1px solid var(--border);
+  flex-shrink:0;overflow-x:auto
+}
+#nav::-webkit-scrollbar{display:none}
+.navbtn{
+  flex:1;min-width:60px;padding:10px 4px;border:none;background:transparent;
+  color:var(--text3);font-size:0.65rem;font-family:var(--font);
+  font-weight:600;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;
+  border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap
+}
+.navbtn.on{color:var(--gold);border-bottom-color:var(--gold)}
+.navbtn .ni{font-size:1rem;display:block;margin-bottom:2px}
+
+/* ── Content Area ── */
+#content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+#content::-webkit-scrollbar{width:2px}
+#content::-webkit-scrollbar-thumb{background:var(--border2)}
+.pane{display:none;padding:12px;animation:fadeUp .2s ease}
+.pane.on{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ── Cards ── */
+.card{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:14px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(240,185,11,.3),transparent)
+}
+.ch2{font-family:var(--display);font-size:.75rem;letter-spacing:2px;
+  color:var(--gold);margin-bottom:12px;text-transform:uppercase}
+
+/* ── Grid ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.met{background:var(--bg4);border-radius:10px;padding:10px;text-align:center;border:1px solid var(--border)}
+.met .mv{font-family:var(--mono);font-size:.95rem;font-weight:600}
+.met .ml{font-size:.6rem;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
+
+/* ── Signal Box ── */
+#sigBox{
+  border-radius:12px;padding:14px;text-align:center;
+  border:1px solid var(--border);background:var(--bg4);
+  font-weight:700;font-size:.85rem;margin:8px 0;letter-spacing:.5px
+}
+#sigBox.buy{background:rgba(0,230,118,.08);border-color:var(--green);color:var(--green)}
+#sigBox.sell{background:rgba(255,61,87,.08);border-color:var(--red);color:var(--red)}
+#sigDetail{
+  font-size:.73rem;color:var(--text2);line-height:1.8;margin-top:8px;
+  padding:10px;background:var(--bg4);border-radius:10px;font-family:var(--mono)
+}
+
+/* ── ICT Checklist ── */
+.ck{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:1px solid var(--border);font-size:.78rem}
+.ck:last-child{border:none}
+.ck-name{color:var(--text2)}
+.tag{font-size:.62rem;padding:3px 9px;border-radius:20px;font-weight:700;letter-spacing:.3px}
+.tg{background:rgba(0,230,118,.15);color:var(--green);border:1px solid rgba(0,230,118,.3)}
+.tr{background:rgba(255,61,87,.15);color:var(--red);border:1px solid rgba(255,61,87,.3)}
+.ty{background:rgba(240,185,11,.15);color:var(--gold);border:1px solid rgba(240,185,11,.3)}
+.tn{background:var(--bg4);color:var(--text3);border:1px solid var(--border)}
+
+/* ── Kill Zones ── */
+.kzg{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.kz{background:var(--bg4);border-radius:10px;padding:10px;font-size:.7rem;
+  border:1px solid var(--border);transition:all .3s}
+.kz.act{border-color:rgba(0,230,118,.5);background:rgba(0,230,118,.05)}
+.kzn{color:var(--gold);font-weight:700;margin-bottom:3px;font-size:.72rem}
+.kzt{color:var(--text3);font-family:var(--mono);font-size:.65rem}
+
+/* ── Buttons ── */
+.btn{display:block;width:100%;padding:14px;border-radius:12px;border:none;
+  font-size:.9rem;font-weight:700;cursor:pointer;margin-top:8px;
+  font-family:var(--font);letter-spacing:.5px;transition:all .2s}
+.btn-gold{background:linear-gradient(135deg,var(--gold2),var(--gold),var(--gold3));color:#000}
+.btn-gold:active{transform:scale(.98)}
+.btn-red{background:linear-gradient(135deg,#ff3d57,#c0392b);color:#fff}
+.btn-grey{width:100%;padding:11px;border-radius:10px;border:1px solid var(--border2);
+  background:var(--bg4);color:var(--text2);font-size:.82rem;cursor:pointer;
+  margin-top:8px;font-family:var(--font);transition:all .2s}
+.btn-grey:active{background:var(--border)}
+.btn-blue{background:linear-gradient(135deg,#1a6fcc,#0d47a1);color:#fff}
+
+/* ── Inputs ── */
+label{display:block;font-size:.7rem;color:var(--text3);margin:10px 0 4px;
+  text-transform:uppercase;letter-spacing:.5px}
+input,select,textarea{
+  width:100%;background:var(--bg4);border:1px solid var(--border2);
+  border-radius:9px;color:var(--text);padding:10px 12px;
+  font-size:.85rem;font-family:var(--font);outline:none;transition:border .2s
+}
+input:focus,select:focus,textarea:focus{border-color:var(--gold)}
+select option{background:var(--bg3)}
+textarea{resize:vertical;min-height:80px;font-size:.8rem}
+
+/* ── Log ── */
+#logbox{
+  background:var(--bg);border-radius:10px;padding:10px;height:200px;
+  overflow-y:auto;font-family:var(--mono);font-size:.65rem;color:var(--text3);line-height:1.9
+}
+#logbox::-webkit-scrollbar{width:2px}
+#logbox::-webkit-scrollbar-thumb{background:var(--border2)}
+.log-g{color:var(--green)}.log-r{color:var(--red)}.log-y{color:var(--gold)}.log-b{color:var(--blue)}
+
+/* ── AI Chat ── */
+#aiMessages{
+  height:260px;overflow-y:auto;padding:10px;
+  display:flex;flex-direction:column;gap:8px
+}
+#aiMessages::-webkit-scrollbar{width:2px}
+.ai-msg{padding:10px 12px;border-radius:12px;font-size:.78rem;line-height:1.6;max-width:92%}
+.ai-msg.bot{background:var(--bg4);border:1px solid var(--border);color:var(--text);align-self:flex-start}
+.ai-msg.user{background:rgba(240,185,11,.12);border:1px solid rgba(240,185,11,.25);
+  color:var(--text);align-self:flex-end;text-align:right}
+.ai-msg.typing{color:var(--text3)}
+#aiInput{display:flex;gap:8px;margin-top:8px}
+#aiInput textarea{border-radius:10px;min-height:44px;max-height:100px;padding:10px}
+#aiInput button{width:44px;height:44px;border-radius:10px;border:none;flex-shrink:0;
+  background:var(--gold);color:#000;font-size:1.1rem;cursor:pointer;align-self:flex-end}
+
+/* ── Positions ── */
+.posrow{padding:9px 0;border-bottom:1px solid var(--border);font-size:.75rem}
+.posrow:last-child{border:none}
+
+/* ── Popup ── */
+.popup-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;
+  display:flex;align-items:center;justify-content:center;
+  animation:fadeIn .15s ease
+}
+.popup-box{
+  background:var(--bg3);border-radius:20px;padding:24px 20px;
+  width:88%;max-width:360px;text-align:center;
+  animation:popIn .25s cubic-bezier(.175,.885,.32,1.275)
+}
+.popup-icon{font-size:2.5rem;margin-bottom:10px}
+.popup-title{font-family:var(--display);font-size:1.3rem;letter-spacing:1px;margin-bottom:10px}
+.popup-body{font-size:.8rem;color:var(--text2);line-height:1.8;margin-bottom:18px}
+.popup-btn{padding:12px 32px;border-radius:12px;border:none;
+  font-weight:700;font-size:.9rem;cursor:pointer;font-family:var(--font)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* Float widget CSS removed */
+
+/* ── Wake badge ── */
+#wakeBadge{
+  position:fixed;top:8px;right:70px;font-size:.6rem;padding:3px 8px;
+  border-radius:20px;background:var(--bg2);border:1px solid var(--border);
+  color:var(--text3);z-index:9001
+}
+#wakeBadge.on{border-color:var(--green);color:var(--green)}
+
+/* ── Mode Badge ── */
+#modeBadgeHeader{display:none}
+
+/* ── Ibox ── */
+.ibox{background:var(--bg4);border-radius:10px;padding:11px;
+  font-size:.76rem;color:var(--text2);line-height:1.7;border:1px solid var(--border)}
+
+/* ── Zones ── */
+.zone-item{padding:7px 0;border-bottom:1px solid var(--border);font-size:.73rem;font-family:var(--mono)}
+.zone-item:last-child{border:none}
+
+/* ── Progress bar ── */
+.pbar-wrap{background:var(--bg4);border-radius:20px;height:6px;overflow:hidden;margin-top:4px}
+.pbar{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--gold3),var(--gold2));transition:width .5s}
+
+/* ── ICT Score ring ── */
+.score-wrap{display:flex;align-items:center;gap:12px}
+.score-ring{width:56px;height:56px;border-radius:50%;flex-shrink:0;
+  background:conic-gradient(var(--gold) 0%, var(--bg4) 0%);
+  display:flex;align-items:center;justify-content:center;position:relative}
+.score-ring::before{content:'';position:absolute;inset:6px;border-radius:50%;background:var(--bg3)}
+.score-num{position:relative;font-family:var(--display);font-size:1rem;color:var(--gold)}
+
+/* ── Education cards ── */
+.edu-card{background:var(--bg4);border:1px solid var(--border);border-radius:12px;
+  padding:12px;margin-bottom:8px;cursor:pointer}
+.edu-card h3{color:var(--gold);font-size:.82rem;margin-bottom:6px;font-family:var(--display);letter-spacing:.5px}
+.edu-card p{font-size:.72rem;color:var(--text3);line-height:1.6}
+.edu-card.open p{color:var(--text2)}
+.edu-expand{font-size:.7rem;color:var(--gold);margin-top:6px;display:none}
+.edu-card.open .edu-expand{display:block}
+
+/* ── Performance chart ── */
+#perfChart{width:100%;height:120px;border-radius:10px;overflow:hidden}
+
+/* ── Scrollbar for content ── */
+#content::-webkit-scrollbar{width:3px}
+
+/* ── Responsive bottom padding ── */
+.pane{padding-bottom:20px}
+@keyframes pulsePill{0%,100%{box-shadow:0 0 0 0 rgba(255,61,87,.4)}50%{box-shadow:0 0 0 5px rgba(255,61,87,0)}}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div style="display:flex;align-items:center;gap:8px">
+    <h1>ICT GOLD BOT</h1>
+    <span id="modePill"></span>
+  </div>
+  <div id="connStatus">
+    <span id="connDot"></span>
+    <span id="connLabel">Offline</span>
+  </div>
+</div>
+
+<!-- PRICE TICKER -->
+<div id="ticker">
+  <div>
+    <div style="font-size:.62rem;color:var(--text3);margin-bottom:2px;font-family:var(--mono)" id="symLabel">GOLD • XAU/USD</div>
+    <div style="display:flex;align-items:center">
+      <div id="priceMain">—</div>
+      <div id="priceChange" class="up" style="display:none">+0.00%</div>
+    </div>
+  </div>
+  <div id="priceSub">— / —<br>Spread: —</div>
+</div>
+
+<!-- NAV -->
+<div id="nav">
+  <button class="navbtn on" id="tb-dash"    onclick="goTab('dash')">   <span class="ni">📊</span>Dashboard</button>
+  <button class="navbtn"    id="tb-ict"     onclick="goTab('ict')">    <span class="ni">🔬</span>ICT</button>
+  <button class="navbtn"    id="tb-ai"      onclick="goTab('ai')">     <span class="ni">🤖</span>AI</button>
+  <button class="navbtn"    id="tb-edu"     onclick="goTab('edu')">    <span class="ni">📚</span>Learn</button>
+  <button class="navbtn"    id="tb-settings"onclick="goTab('settings')"><span class="ni">⚙️</span>Settings</button>
+  <button class="navbtn"    id="tb-history" onclick="goTab('history')"> <span class="ni">📈</span>History</button>
+</div>
+
+<!-- CONTENT -->
+<div id="content">
+
+<!-- ══════════════════ DASHBOARD ══════════════════ -->
+<div class="pane on" id="pane-dash">
+
+  <div class="card">
+    <div class="ch2">Account Overview</div>
+    <div class="g2">
+      <div class="met"><div class="mv" id="elBal" style="color:var(--green)">—</div><div class="ml">Balance</div></div>
+      <div class="met"><div class="mv" id="elEq">—</div><div class="ml">Equity</div></div>
+      <div class="met"><div class="mv" id="elWR" style="color:var(--gold)">—</div><div class="ml">Win Rate</div></div>
+      <div class="met"><div class="mv" id="elDD" style="color:var(--red)">0%</div><div class="ml">Day DD</div></div>
+    </div>
+    <div class="g2" style="margin-top:8px">
+      <div class="met">
+        <div class="mv" id="elOpenTrades" style="color:var(--blue);font-size:.9rem">0<span style="color:var(--text3);font-weight:400;font-size:.75em"> / 1</span></div>
+        <div class="ml">Open Trades</div>
+      </div>
+      <div class="met">
+        <div class="mv" id="elMode" style="color:var(--gold)">—</div>
+        <div class="ml">Mode</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Server-side bot status card — only shown if server engine is running -->
+  <div class="card" id="serverCard" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="ch2" style="margin-bottom:0">⚡ SERVER ENGINE</div>
+      <div id="serverDot" style="width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)"></div>
+    </div>
+    <div style="font-size:.68rem;color:var(--text3);margin-bottom:8px">Running 24/7 via GitHub Actions — independent of your phone</div>
+    <div class="g2">
+      <div class="met"><div class="mv" id="svLastRun" style="font-size:.72rem;color:var(--gold)">—</div><div class="ml">Last Run</div></div>
+      <div class="met"><div class="mv" id="svStatus" style="font-size:.72rem">—</div><div class="ml">Status</div></div>
+    </div>
+    <div class="met" style="margin-top:8px">
+      <div style="font-size:.68rem;color:var(--text3);text-align:left;line-height:1.6" id="svLastSignal">No signal yet</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch2">Current Signal</div>
+    <div id="sigBox">⏳ AWAITING SETUP</div>
+    <div id="sigDetail">Connect your account in Settings and press Start Bot to begin scanning for ICT setups.</div>
+  </div>
+
+  <div class="card">
+    <div class="ch2">Kill Zones <span style="font-size:.6rem;color:var(--text3)">(SAST UTC+2)</span></div>
+    <div class="kzg" id="kzGrid"></div>
+  </div>
+
+  <div class="card" id="openCard" style="display:none">
+    <!-- Header row: title + live P&L + trade count -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="ch2" style="margin-bottom:0">Active Trades</div>
+        <div id="activeTradePill" style="background:var(--red);color:#fff;font-family:var(--mono);font-size:.62rem;font-weight:700;border-radius:20px;padding:2px 8px;min-width:20px;text-align:center;animation:pulsePill 2s infinite">0</div>
+      </div>
+      <div id="totalFloatPnl" style="font-family:var(--mono);font-size:.8rem;font-weight:700;color:var(--text3)">P&amp;L —</div>
+    </div>
+    <!-- Individual trade cards -->
+    <div id="posEl"></div>
+    <!-- Action buttons -->
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <button class="btn btn-red" onclick="closeAll()" style="flex:1;font-size:.78rem;padding:10px;margin-top:0">✕ Close All</button>
+      <button onclick="fetchPositions()" style="flex:0 0 44px;padding:10px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text2);font-size:1rem;cursor:pointer" title="Refresh positions">🔄</button>
+    </div>
+  </div>
+
+  <div id="reconnectBanner" style="display:none;background:rgba(255,61,87,.1);border:1px solid var(--red);border-radius:10px;padding:10px;text-align:center;font-size:.75rem;color:var(--red);margin-bottom:8px">⚠️ Connection lost — reconnecting…</div>
+
+  <button class="btn btn-gold" id="startBtn" onclick="toggleBot()">▶ START BOT</button>
+  <button class="btn btn-red"  id="stopBtn"  onclick="stopBot()" style="display:none">⏹ STOP BOT</button>
+
+</div>
+
+<!-- ══════════════════ ICT TAB ══════════════════ -->
+<div class="pane" id="pane-ict">
+
+  <div class="card">
+    <div class="ch2">ICT Confluence Score</div>
+    <div class="score-wrap">
+      <div class="score-ring" id="scoreRing">
+        <div class="score-num" id="scoreNum">0</div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:.72rem;color:var(--text2);margin-bottom:4px">Confluence out of 7 factors</div>
+        <div class="pbar-wrap"><div class="pbar" id="scorePbar" style="width:0%"></div></div>
+        <div style="font-size:.65rem;color:var(--text3);margin-top:4px" id="scoreLabel">Waiting for analysis…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch2">ICT Checklist</div>
+    <div class="ck" style="background:rgba(240,185,11,.08);border-radius:6px;padding:7px;margin-bottom:4px">
+      <span class="ck-name" style="color:var(--gold);font-weight:700">🥇 Silver Bullet Window</span>
+      <span class="tag tn" id="ck-sb">—</span>
+    </div>
+    <div class="ck"><span class="ck-name">🕐 Kill Zone Active</span>         <span class="tag tn" id="ck-kz">—</span></div>
+    <div class="ck"><span class="ck-name">💧 Liquidity Swept (Rule #1)</span><span class="tag tn" id="ck-liq">—</span></div>
+    <div class="ck"><span class="ck-name">🔀 Market Structure (BOS/CHoCH)</span><span class="tag tn" id="ck-ms">—</span></div>
+    <div class="ck"><span class="ck-name">📊 Fair Value Gap + CE</span>      <span class="tag tn" id="ck-fvg">—</span></div>
+    <div class="ck"><span class="ck-name">🧱 Order Block</span>               <span class="tag tn" id="ck-ob">—</span></div>
+    <div class="ck"><span class="ck-name">🔲 Breaker Block</span>             <span class="tag tn" id="ck-brk">—</span></div>
+    <div class="ck"><span class="ck-name">📡 HTF Bias (EMA8/21)</span>        <span class="tag tn" id="ck-bias">—</span></div>
+    <div class="ck"><span class="ck-name">🎯 OTE (61.8–79% Fib)</span>        <span class="tag tn" id="ck-ote">—</span></div>
+    <div class="ck"><span class="ck-name">💰 Premium / Discount Zone</span>   <span class="tag tn" id="ck-pd">—</span></div>
+    <div class="ck"><span class="ck-name">⚡ Power of 3 / AMD Phase</span>    <span class="tag tn" id="ck-po3">—</span></div>
+    <div class="ck" style="background:var(--bg4);border-radius:8px;padding:8px;margin-top:6px;justify-content:space-between">
+      <span class="ck-name" style="font-weight:700;font-size:.8rem">🏆 CallistoFX Score</span>
+      <span class="tag ty" id="ck-score" style="font-size:.75rem;padding:4px 12px">0/10</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch2">Detected Zones</div>
+    <div id="zonesEl" class="ibox">Start the bot to detect zones.</div>
+  </div>
+
+  <div class="card">
+    <div class="ch2">Market Structure</div>
+    <div id="msEl" class="ibox">—</div>
+  </div>
+
+</div>
+
+<!-- ══════════════════ AI TAB ══════════════════ -->
+<div class="pane" id="pane-ai">
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold3));display:flex;align-items:center;justify-content:center;font-size:1rem">🤖</div>
+      <div>
+        <div style="font-family:var(--display);font-size:.9rem;letter-spacing:.5px;color:var(--gold)">ICT AI ANALYST</div>
+        <div style="font-size:.62rem;color:var(--green)">✅ Built-in • Free • No API needed</div>
+      </div>
+      <div style="margin-left:auto;font-size:.62rem;color:var(--green)">● Online</div>
+    </div>
+    <div id="aiMessages">
+      <div class="ai-msg bot">👋 Hello! I'm your ICT AI Analyst. I can help you understand current market structure, explain ICT concepts, analyse setups, and give you insights on GOLD trading. Ask me anything!</div>
+    </div>
+    <div style="padding:10px;border-top:1px solid var(--border)">
+      <div id="aiInput">
+        <textarea id="aiText" placeholder="Ask about market structure, setups, ICT concepts…" rows="1"></textarea>
+        <button type="button" style="font-size:1.2rem;width:44px;height:44px;border-radius:10px;border:none;background:var(--gold);color:#000;cursor:pointer;flex-shrink:0;align-self:flex-end" onclick="(function(){var i=document.getElementById('aiText');if(!i||!i.value.trim())return;var m=i.value.trim();i.value='';if(typeof quickAI==='function')quickAI(m);})()">➤</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn-grey" type="button" style="width:auto;padding:5px 10px;font-size:.65rem;margin:0;background:rgba(240,185,11,.12);border-color:var(--gold);color:var(--gold)" onclick="quickAI('Explain the CallistoFX Silver Bullet strategy step by step')">🥇 Silver Bullet</button>
+        <button class="btn-grey" type="button" style="width:auto;padding:5px 10px;font-size:.65rem;margin:0;background:rgba(240,185,11,.12);border-color:var(--gold);color:var(--gold)" onclick="quickAI('What is Power of 3 AMD model and the Judas Swing?')">⚡ Power of 3</button>
+        <button class="btn-grey" type="button" style="width:auto;padding:5px 10px;font-size:.65rem;margin:0" onclick="quickAI('What is the current market structure for GOLD')">Market Structure</button>
+        <button class="btn-grey" type="button" style="width:auto;padding:5px 10px;font-size:.65rem;margin:0" onclick="quickAI('Explain Fair Value Gaps and the Consequent Encroachment CE')">FVG + CE</button>
+        <button class="btn-grey" type="button" style="width:auto;padding:5px 10px;font-size:.65rem;margin:0" onclick="quickAI('Explain Order Blocks and Breaker Blocks in ICT')">OB + Breakers</button>
+        <button class="btn-grey" type="button" style="width:auto;padding:5px 10px;font-size:.65rem;margin:0" onclick="quickAI('What are the best kill zones for GOLD trading')">Kill Zones</button>
+        <button class="btn-grey" type="button" style="width:auto;padding:5px 10px;font-size:.65rem;margin:0" onclick="quickAI('What is NDOG and NWOG and how do I trade them?')">NDOG/NWOG</button>
+        <button class="btn-grey" type="button" style="width:auto;padding:5px 10px;font-size:.65rem;margin:0" onclick="quickAI('Analyse my current bot signal and give me confidence rating')">Analyse Signal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ EDUCATION TAB ══════════════════ -->
+<div class="pane" id="pane-edu">
+  <div class="card">
+    <div class="ch2">ICT Trading Mastery</div>
+    <div class="ibox" style="margin-bottom:10px">
+      Tap any concept to expand. Master ICT methodology to understand every signal your bot generates.
+    </div>
+  </div>
+  <div id="eduList"></div>
+</div>
+
+<!-- ══════════════════ SETTINGS ══════════════════ -->
+<div class="pane" id="pane-settings">
+
+  <div class="card">
+    <div class="ch2">MetaAPI Connection</div>
+    <div class="ibox" style="margin-bottom:10px;color:var(--text2)">
+      1. Go to <b style="color:var(--gold)">metaapi.cloud</b> → create free account<br>
+      2. Add your MT4/MT5 broker account<br>
+      3. Copy your <b style="color:var(--gold)">API Token</b> and <b style="color:var(--gold)">Account ID</b><br>
+      4. Make sure account is <b style="color:var(--green)">Deployed</b> in MetaAPI dashboard
+    </div>
+    <label>MetaAPI Token</label>
+    <input type="password" id="cfgToken" placeholder="Paste MetaAPI token"/>
+    <label>Account ID</label>
+    <input type="text" id="cfgAccId" placeholder="e.g. 37173112-6343-4783-89fd"/>
+    <label>Server Region</label>
+    <select id="cfgRegion">
+      <option value="auto">🔄 Auto-detect (recommended)</option>
+      <option value="new-york">New York</option>
+      <option value="london">London</option>
+      <option value="singapore">Singapore</option>
+      <option value="sydney">Sydney</option>
+      <option value="frankfurt">Frankfurt</option>
+    </select>
+    <button class="btn-grey" id="testBtn" onclick="testConn()">🔗 Test Connection</button>
+  </div>
+
+  <div class="card">
+    <div class="ch2">Broker & Instrument</div>
+    <label>Broker</label>
+    <select id="cfgBroker" onchange="onBrokerChange()">
+      <option value="xm">XM (default)</option>
+      <option value="exness">Exness</option>
+      <option value="exo">EXO Markets</option>
+      <option value="goat">GOAT Funded Traders</option>
+      <option value="other">Other Broker</option>
+    </select>
+    <div id="brokerSymbolHint" class="ibox" style="margin-top:8px;font-size:.7rem;color:var(--text3)"></div>
+    <label>Gold Symbol</label>
+    <select id="cfgSymbol">
+      <optgroup label="Gold">
+        <option value="GOLD#">GOLD# (XM default)</option>
+        <option value="GOLD">GOLD</option>
+        <option value="XAUUSD">XAUUSD</option>
+        <option value="XAUUSDm">XAUUSDm (micro)</option>
+        <option value="XAUUSDpro">XAUUSDpro</option>
+      </optgroup>
+      <optgroup label="Forex">
+        <option value="USDZAR">USD/ZAR</option>
+        <option value="GBPZAR">GBP/ZAR</option>
+        <option value="GBPUSD">GBP/USD</option>
+        <option value="EURUSD">EUR/USD</option>
+      </optgroup>
+      <optgroup label="Crypto">
+        <option value="BTCUSD#">BTCUSD# (XM Bitcoin)</option>
+        <option value="BTCUSD">BTC/USD — Bitcoin</option>
+        <option value="ETHUSD">ETH/USD — Ethereum</option>
+      </optgroup>
+    </select>
+    <label>Account Currency</label>
+    <select id="cfgCurrency">
+      <option value="R">R — South African Rand</option>
+      <option value="$">$ — US Dollar</option>
+      <option value="£">£ — British Pound</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div class="ch2">Trading Mode</div>
+    <select id="cfgMode">
+      <option value="normal">📊 Normal — ICT Standard (10min–4hr)</option>
+      <option value="aggressive">⚡ Aggressive — Scalp (1–15min)</option>
+      <option value="sniper">🎯 Sniper — Swing (1–5 days)</option>
+    </select>
+    <div id="modeDesc" class="ibox" style="margin-top:8px;font-size:.72rem"></div>
+  </div>
+
+  <div class="card">
+    <div class="ch2">Risk Management</div>
+    <label>Risk Per Trade (%)</label>
+    <input type="number" id="cfgRisk" value="1" min="0.1" max="5" step="0.1"/>
+    <label>Max Daily Drawdown (%)</label>
+    <input type="number" id="cfgDD" value="5" min="1" max="20" step="0.5"/>
+    <label>Max Open Trades</label>
+    <input type="number" id="cfgMaxT" value="1" min="1" max="3"/>
+    <label>Fixed Lot Size (0 = auto-calculate)</label>
+    <input type="number" id="cfgLot" value="0" min="0" max="10" step="0.01"/>
+  </div>
+
+  <div class="card">
+    <div class="ch2">ICT Strategy Parameters</div>
+    <label>Min Confluence Score (of 7)</label>
+    <input type="number" id="cfgMinScore" value="5" min="3" max="7"/>
+    <label>SL Buffer (points past Order Block)</label>
+    <input type="number" id="cfgSLBuf" value="15" min="5" max="200"/>
+    <label>Risk:Reward Ratio</label>
+    <input type="number" id="cfgRR" value="3" min="1" max="10" step="0.5"/>
+    <label>Session Filter</label>
+    <select id="cfgSession">
+      <option value="both">London + New York</option>
+      <option value="london">London Only</option>
+      <option value="ny">New York Only</option>
+      <option value="off">All Sessions (24h)</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div class="ch2">AI Integration</div>
+    <div class="ibox" style="font-size:.72rem;color:var(--green)">
+      ✅ <b>Built-in ICT AI — no API key needed, completely free.</b><br>
+      The AI Analyst is powered by an embedded ICT knowledge engine with full awareness of your live market data, current signal, and bot state.
+    </div>
+  </div>
+
+  <button class="btn btn-gold" onclick="saveSettings()">💾 Save Settings</button>
+
+  <div class="card" style="border-color:rgba(79,195,247,.4)">
+    <div class="ch2" style="color:var(--blue)">🧪 Test Trade Execution</div>
+    <div class="ibox" style="margin-bottom:12px;color:var(--text2)">
+      Places a <b style="color:var(--blue)">0.01 lot</b> test trade with a <b>10-point SL</b> and <b>10-point TP</b> — it will close almost immediately at a tiny profit or loss (a few cents). This bypasses all ICT analysis and tests ONLY whether MetaAPI can place a trade on your broker.<br><br>
+      <b style="color:var(--gold)">Use on demo account first!</b>
+    </div>
+    <label>Test Direction</label>
+    <select id="testDir">
+      <option value="buy">BUY (test long)</option>
+      <option value="sell">SELL (test short)</option>
+    </select>
+    <button class="btn-grey" id="testTradeBtn" onclick="runTestTrade()" style="border-color:var(--blue);color:var(--blue);margin-top:10px">
+      🧪 Place Test Trade (0.01 lot)
+    </button>
+    <div id="testTradeResult" class="ibox" style="margin-top:10px;display:none;font-family:var(--mono);font-size:.72rem"></div>
+  </div>
+
+</div>
+
+<!-- ══════════════════ HISTORY ══════════════════ -->
+<div class="pane" id="pane-history">
+
+  <div class="card">
+    <div class="ch2">Performance Summary</div>
+    <div class="g3">
+      <div class="met"><div class="mv" id="hW" style="color:var(--green)">0</div><div class="ml">Wins</div></div>
+      <div class="met"><div class="mv" id="hL" style="color:var(--red)">0</div><div class="ml">Losses</div></div>
+      <div class="met"><div class="mv" id="hWR" style="color:var(--gold)">—</div><div class="ml">Win Rate</div></div>
+    </div>
+    <div class="g2" style="margin-top:8px">
+      <div class="met"><div class="mv" id="hPnl">R0.00</div><div class="ml">Net P&amp;L</div></div>
+      <div class="met"><div class="mv" id="hTrades">0</div><div class="ml">Total Trades</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch2">Activity Log</div>
+    <div id="logbox"></div>
+    <button class="btn-grey" onclick="clearLog()" style="margin-top:8px;font-size:.75rem">🗑 Clear Log</button>
+  </div>
+
+  <div class="card">
+    <div class="ch2">Recent Trades</div>
+    <div id="tradeList" class="ibox">No closed trades yet.</div>
+  </div>
+
+</div>
+
+</div><!-- /content -->
+
+<!-- Wake badge -->
+<div id="wakeBadge">⚡ Off</div>
+
+<!-- Float widget removed -->
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  ICT GOLD BOT PRO — Core Engine
+//  All network calls route through Netlify functions
+//  Timeouts use Promise.race (reliable on Android Chrome)
+// ════════════════════════════════════════════════════════════
+
+// ── Config ────────────────────────────────────────────────────────────────────
+var C = {
+  token:'', accId:'', region:'auto', symbol:'GOLD#', currency:'R',
+  mode:'normal', risk:1, dd:5, maxT:1, minScore:5,
+  lot:0, slBuf:15, rr:3, session:'both', broker:'xm'
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+var running=false, connected=false;
+var bid=0, ask=0, prevPrice=0;
+var candles=[], candlesFetchedAt=0;
+var openTrades=[], monitoredTrades={};
+var wins=0, losses=0, pnl=0, bal=0, eq=0, dayBal=0;
+var loopTimer=null, kzTimer=null, histTimer=null, bgPingTimer=null, posTimer=null;
+var detectedRegion='new-york';
+var lastPriceTime=0;
+
+// ════════════════════════════════════════════════════════════
+//  NETWORK LAYER — all requests routed through Netlify
+// ════════════════════════════════════════════════════════════
+
+// Reliable timeout — Promise.race instead of AbortSignal (fixes Android Chrome)
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise(function(_,rej){setTimeout(function(){rej(new Error('Timeout after '+ms+'ms'));},ms)})
+  ]);
+}
+
+// Route ALL external calls through Netlify functions (no CORS, no blocking)
+async function netlifyFetch(funcName, params) {
+  // Always use POST to avoid querystring length limits with long tokens
+  var r = await withTimeout(
+    fetch('/.netlify/functions/'+funcName, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(params)
+    }),
+    15000
+  );
+  var text = await r.text();
+  if (!r.ok) throw new Error(r.status+': '+text.substring(0,200));
+  try { return JSON.parse(text); }
+  catch(e) { throw new Error('Bad response: '+text.substring(0,120)); }
+}
+
+// MetaAPI call via proxy
+async function mFetch(path, method, body) {
+  var region = detectedRegion || 'new-york';
+  var url = 'https://mt-client-api-v1.'+region+'.agiliumtrade.ai/users/current/accounts/'+C.accId+path;
+  // Pass token in POST body to avoid querystring length limits
+  var fetchMethod = (method && method!=='GET') ? method : 'POST';
+  var payload = { url:url, token:C.token, method: method||'GET' };
+  if (body) payload.tradeBody = body;
+  var r = await withTimeout(
+    fetch('/.netlify/functions/metaapi', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    }),
+    15000
+  );
+  var text = await r.text();
+  if (!r.ok) throw new Error(r.status+': '+text.substring(0,200));
+  try { return JSON.parse(text); }
+  catch(e) { throw new Error('Bad response: '+text.substring(0,120)); }
+}
+
+// Auto-detect MetaAPI region — tries all regions, uses first that responds
+var REGIONS = ['new-york','london','singapore','sydney','frankfurt'];
+
+// Broker symbol variant map — tried in order until one works
+var BROKER_SYMBOLS = {
+  'xm':     ['GOLD#','GOLD','XAUUSD','XAUUSDm','BTCUSD#','BTCUSD'],
+  'exness': ['XAUUSD','XAUUSDm','GOLD'],
+  'exo':    ['XAUUSD','GOLD','XAUUSDpro','XAUUSDm'],
+  'goat':   ['XAUUSD','GOLD','XAUUSDm'],
+  'other':  ['XAUUSD','GOLD','GOLD#','XAUUSDm','XAUUSDpro']
+};
+
+var BROKER_HINTS = {
+  'xm':     'XM uses GOLD# as primary symbol. Auto-detect will try GOLD# → GOLD → XAUUSD.',
+  'exness': 'Exness uses XAUUSD. Auto-detect will try XAUUSD → XAUUSDm.',
+  'exo':    'EXO Markets typically uses XAUUSD. Auto-detect will try XAUUSD → GOLD → XAUUSDpro.',
+  'goat':   'GOAT Funded Traders uses XAUUSD. Auto-detect will try XAUUSD → GOLD → XAUUSDm.',
+  'other':  'Auto-detect will try all common Gold symbol names.'
+};
+
+
+// Get display label for dashboard based on current symbol
+function getSymLabel(sym){
+  sym = sym || C.symbol || 'GOLD#';
+  if(sym==='GOLD#'||sym==='GOLD'||sym.startsWith('XAUUSD')||sym==='XAUUSDpro') return sym+' • XAU/USD';
+  if(sym==='BTCUSD#'||sym==='BTCUSD'||sym==='BTCUSDT') return sym+' • BTC/USD';
+  if(sym==='ETHUSD') return sym+' • ETH/USD';
+  if(sym.includes('ZAR')) return sym+' • ZAR';
+  if(sym.includes('GBP')) return sym+' • GBP';
+  return sym;
+}
+function updateSymLabel(){
+  var el=G('symLabel'); if(el) el.textContent=getSymLabel(C.symbol);
+}
+// Called when broker dropdown changes — updates hint and symbol default
+function onBrokerChange(){
+  var broker = G('cfgBroker')?G('cfgBroker').value:'xm';
+  var hint   = G('brokerSymbolHint');
+  var symSel = G('cfgSymbol');
+  if(hint) hint.textContent = BROKER_HINTS[broker]||'';
+  // Set default symbol for this broker
+  var defaults = {'xm':'GOLD#','exness':'XAUUSD','exo':'XAUUSD','goat':'XAUUSD','other':'XAUUSD'};
+  if(symSel&&defaults[broker]) symSel.value = defaults[broker];
+}
+async function autoDetectRegion() {
+  // If user set a specific region, use it
+  if (C.region && C.region !== 'auto') {
+    detectedRegion = C.region;
+    addLog('Using region: '+C.region, 'y');
+    return C.region;
+  }
+  // Auto-detect: try each region via POST until one responds
+  addLog('Auto-detecting MetaAPI region…', 'y');
+  for (var i=0; i<REGIONS.length; i++) {
+    var reg = REGIONS[i];
+    try {
+      var testUrl = 'https://mt-client-api-v1.'+reg+'.agiliumtrade.ai/users/current/accounts/'+C.accId+'/account-information';
+      var r = await withTimeout(
+        fetch('/.netlify/functions/metaapi', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({url:testUrl, token:C.token, method:'GET'})
+        }),
+        8000
+      );
+      if (r.ok) {
+        var d = await r.json();
+        if (d && !d.error && d.balance !== undefined) {
+          detectedRegion = reg;
+          addLog('Region detected: '+reg, 'g');
+          return reg;
+        }
+      }
+    } catch(e) { /* try next region */ }
+  }
+  // Fallback to new-york if none found
+  detectedRegion = 'new-york';
+  addLog('Region auto-detect failed — using new-york as fallback', 'y');
+  return 'new-york';
+}
+
+// Auto-detect the correct gold symbol for this broker
+async function autoDetectSymbol(region) {
+  var broker    = C.broker || 'xm';
+  var variants  = (BROKER_SYMBOLS[broker]||BROKER_SYMBOLS['other']).slice();
+  // Always put currently configured symbol first
+  if(C.symbol && !variants.includes(C.symbol)) variants.unshift(C.symbol);
+  else if(C.symbol) { variants = variants.filter(function(v){return v!==C.symbol;}); variants.unshift(C.symbol); }
+
+  addLog('Detecting symbol for '+broker.toUpperCase()+'…','y');
+  for(var i=0;i<variants.length;i++){
+    var sym = variants[i];
+    try{
+      var testUrl = 'https://mt-client-api-v1.'+region+'.agiliumtrade.ai/users/current/accounts/'+C.accId+'/symbols/'+sym+'/current-price';
+      var r = await fetch('/.netlify/functions/metaapi',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({url:testUrl,token:C.token,method:'GET'})
+      });
+      var d = await r.json();
+      if(d&&(d.bid||d.ask)&&!d.error){
+        if(sym !== C.symbol){
+          C.symbol = sym;
+          addLog('Symbol auto-detected: '+sym,'g');
+          var ss = G('cfgSymbol'); if(ss) ss.value = sym;
+          var sl2 = G('symLabel'); if(sl2) sl2.textContent = getSymLabel(sym);
+        } else {
+          addLog('Symbol confirmed: '+sym,'g');
+        }
+        return sym;
+      }
+    }catch(e){}
+  }
+  addLog('Symbol auto-detect failed — using: '+C.symbol,'y');
+  return C.symbol;
+}
+
+// Price source — gold-api via proxy
+async function fetchPrice() {
+  try {
+    var sym = C.symbol;
+    var url, parser;
+
+    // Gold symbols all use gold-api.com regardless of broker naming
+    var isGold = sym==='GOLD'||sym==='GOLD#'||sym.startsWith('XAUUSD')||sym==='XAUUSDpro';
+    var isBTC  = sym==='BTCUSD#'||sym==='BTCUSD'||sym==='BTCUSDT'||sym==='ETHUSD';
+    if (isGold) {
+      url = 'https://api.gold-api.com/price/XAU';
+      parser = function(d){ return parseFloat(d.price)||0; };
+    } else if (isBTC) {
+      // Bitcoin/Ethereum via Yahoo Finance
+      var btcTicker = sym==='ETHUSD' ? 'ETH-USD' : 'BTC-USD';
+      url = 'https://query1.finance.yahoo.com/v8/finance/chart/'+btcTicker+'?interval=1m&range=1d';
+      parser = function(d){ return parseFloat(d.chart.result[0].meta.regularMarketPrice)||0; };
+    } else {
+      var tickers = {'GBPUSD':'GBPUSD=X','USDZAR':'ZAR=X','GBPZAR':'GBPZAR=X'};
+      var t = tickers[sym]||'GC=F';
+      url = 'https://query1.finance.yahoo.com/v8/finance/chart/'+t+'?interval=1m&range=1d';
+      parser = function(d){ return parseFloat(d.chart.result[0].meta.regularMarketPrice)||0; };
+    }
+
+    var d = await netlifyFetch('market', {url:url});
+    var price = parser(d);
+    if (!price) throw new Error('No price in response');
+
+    prevPrice = bid || price;
+    var spread = sym.includes('ZAR')?0.05:isBTC?5.00:0.30;
+    bid = parseFloat((price-spread/2).toFixed(5));
+    ask = parseFloat((price+spread/2).toFixed(5));
+    lastPriceTime = Date.now();
+
+    var dec = sym.includes('ZAR')?4:2;
+    var change = prevPrice>0 ? ((price-prevPrice)/prevPrice*100) : 0;
+    var G = function(id){return document.getElementById(id);};
+    if(G('priceMain')) G('priceMain').textContent = price.toFixed(dec);
+    var pc = G('priceChange');
+    if(pc){
+      pc.style.display='inline-block';
+      pc.textContent=(change>=0?'+':'')+change.toFixed(3)+'%';
+      pc.className='up'+(change<0?' dn':'');
+    }
+    if(G('priceSub')) G('priceSub').innerHTML='Bid:'+bid.toFixed(dec)+' / Ask:'+ask.toFixed(dec)+'<br>Spread:'+(ask-bid).toFixed(dec);
+    return true;
+  } catch(e) {
+    addLog('Price error: '+e.message,'r');
+    return false;
+  }
+}
+
+// Fetch 1h candles — refresh every 60 min
+async function fetchCandles() {
+  var now=Date.now();
+  if (candles.length>=10 && (now-candlesFetchedAt)<3600000) return true;
+  try {
+    var sym=C.symbol;
+    var tickers={'GOLD':'GC=F','XAUUSD':'GC=F','XAUUSDm':'GC=F','GOLD#':'GC=F','XAUUSDpro':'GC=F','BTCUSD#':'BTC-USD','BTCUSD':'BTC-USD','ETHUSD':'ETH-USD','GBPUSD':'GBPUSD=X','USDZAR':'ZAR=X','GBPZAR':'GBPZAR=X'};
+    var ticker=tickers[sym]||'GC=F';
+    var url='https://query1.finance.yahoo.com/v8/finance/chart/'+ticker+'?interval=1h&range=10d';
+    var d=await netlifyFetch('market',{url:url});
+    var result=d.chart.result[0];
+    var times=result.timestamp, q=result.indicators.quote[0];
+    if(!times||!times.length) throw new Error('No candle data');
+    var arr=times.map(function(t,i){
+      return {time:t*1000,open:q.open[i]||0,high:q.high[i]||0,low:q.low[i]||0,close:q.close[i]||0};
+    }).filter(function(c){return c.open&&c.close;});
+    if(arr.length>=5){
+      candles=arr; candlesFetchedAt=now;
+      addLog('Candles refreshed: '+arr.length+' bars','y');
+      return true;
+    }
+    return false;
+  } catch(e){ addLog('Candle error: '+e.message,'r'); return false; }
+}
+
+// Fetch account info
+async function fetchAccount() {
+  try {
+    var d=await withTimeout(mFetch('/account-information'),12000);
+    bal=parseFloat(d.balance)||0; eq=parseFloat(d.equity)||0;
+    if(!dayBal) dayBal=bal;
+    var G=function(id){return document.getElementById(id);};
+    if(G('elBal')) G('elBal').textContent=cur(bal.toFixed(2));
+    if(G('elEq'))  G('elEq').textContent =cur(eq.toFixed(2));
+    var ddPct=dayBal>0?((dayBal-bal)/dayBal*100):0;
+    if(G('elDD'))  G('elDD').textContent =ddPct.toFixed(1)+'%';
+    return true;
+  } catch(e){ return false; }
+}
+
+// Fetch open positions from MetaAPI
+async function fetchPositions() {
+  try {
+    var d = await withTimeout(mFetch('/positions'), 12000);
+    openTrades = Array.isArray(d) ? d : [];
+    renderPositions();      // renders cards + updates counters
+    monitorPositions(openTrades);
+  } catch(e){
+    // On error just re-render with stale data so UI stays consistent
+    renderPositions();
+  }
+}
+
+// Fetch closed trade history — non-blocking, runs separately
+async function fetchHistory() {
+  try {
+    var now=new Date(), since=new Date(now.getTime()-86400000);
+    var d=await withTimeout(
+      mFetch('/history-deals/time/'+encodeURIComponent(since.toISOString())+'/'+encodeURIComponent(now.toISOString())),
+      12000
+    );
+    var deals=Array.isArray(d)?d:[];
+    var botDeals=deals.filter(function(o){return o.comment==='ICT_BOT'&&o.entryType==='DEAL_ENTRY_OUT';});
+    wins=0;losses=0;pnl=0;
+    botDeals.forEach(function(o){var p=parseFloat(o.profit||0);pnl+=p;if(p>=0)wins++;else losses++;});
+    updateStats();
+    var tl=document.getElementById('tradeList');
+    if(tl&&botDeals.length){
+      tl.innerHTML=botDeals.slice(-15).reverse().map(function(o){
+        var p=parseFloat(o.profit||0),pc=p>=0?'var(--green)':'var(--red)',tc=o.type&&o.type.includes('BUY')?'var(--green)':'var(--red)';
+        return '<div class="posrow"><b style="color:'+tc+'">'+(o.type||'?')+'</b> '+(o.volume||0)+' lot @ '+(o.openPrice||0)+' <span style="color:'+pc+'">'+cur(p.toFixed(2))+'</span></div>';
+      }).join('');
+    }
+  } catch(e){} // history is non-blocking
+}
+</script>
+<script>
+// ════════════════════════════════════════════════════════════
+//  ICT ANALYSIS ENGINE — Full ICT methodology implementation
+// ════════════════════════════════════════════════════════════
+
+// Fair Value Gaps
+// ═══════════════════════════════════════════════════════════
+//  CALLISTO FX ICT ENGINE v2.0
+//  Based on CallistoFX / Callisto FX Raw methodology:
+//  Silver Bullet | Power of 3 | NDOG/NWOG | Judas Swing
+//  Breaker Blocks | Displacement Candles | Multi-TF Analysis
+// ═══════════════════════════════════════════════════════════
+
+// ── Kill Zones (SAST = UTC+2) ────────────────────────────────────────────────
+// CallistoFX focuses heavily on London Open + NY Open Silver Bullet windows
+var KZ=[
+  {name:'Asian Range',     us:23, ue:2,  sessions:['off'],    color:'#6c5ce7'},
+  {name:'London Open',     us:7,  ue:10, sessions:['both','london'], color:'#0984e3'},
+  {name:'Silver Bullet NY',us:12, ue:13, sessions:['both','ny'],     color:'#e17055'},
+  {name:'NY Open',         us:13, ue:16, sessions:['both','ny'],     color:'#00b894'},
+  {name:'London Close',    us:14, ue:16, sessions:['both','london'], color:'#fdcb6e'}
+];
+
+// Silver Bullet windows (UTC hours) — CallistoFX primary setup times
+// London: 3-4 AM ET (08:00-09:00 UTC) | NY AM: 10-11 AM ET (15:00-16:00 UTC)
+var SILVER_BULLET_WINDOWS=[
+  {name:'London SB', start:7,  end:9,  label:'LDN Silver Bullet'},
+  {name:'NY AM SB',  start:14, end:15, label:'NY Silver Bullet'},
+  {name:'NY PM SB',  start:19, end:20, label:'NY PM Silver Bullet'}
+];
+
+function kzActive(kz){
+  var h=new Date().getUTCHours()+new Date().getUTCMinutes()/60;
+  return kz.us<kz.ue?(h>=kz.us&&h<kz.ue):(h>=kz.us||h<kz.ue);
+}
+function inSilverBullet(){
+  var h=new Date().getUTCHours()+new Date().getUTCMinutes()/60;
+  return SILVER_BULLET_WINDOWS.some(function(w){return h>=w.start&&h<w.end;});
+}
+function activeSilverBullet(){
+  var h=new Date().getUTCHours()+new Date().getUTCMinutes()/60;
+  return SILVER_BULLET_WINDOWS.find(function(w){return h>=w.start&&h<w.end;})||null;
+}
+function anyKZ(){
+  if(C.session==='off') return true;
+  return KZ.some(function(kz){return kzActive(kz)&&kz.sessions.includes(C.session);});
+}
+function kzSAST(h){return((h+2)%24).toString().padStart(2,'0')+':00';}
+function renderKZ(){
+  var grid=document.getElementById('kzGrid'); if(!grid) return;
+  grid.innerHTML='';
+  var allKZ=KZ.concat([
+    {name:'LDN Silver Bullet', us:7,  ue:9,  color:'#f0b90b'},
+    {name:'NY Silver Bullet',  us:14, ue:15, color:'#f0b90b'}
+  ]);
+  allKZ.slice(0,6).forEach(function(kz){
+    var on=kzActive(kz);
+    var d=document.createElement('div');
+    d.className='kz'+(on?' act':'');
+    d.innerHTML='<div class="kzn" style="color:'+(on?(kz.color||'var(--green)'):'')+'">'
+      +(on?'🟢':'⚪')+' '+kz.name+'</div>'
+      +'<div class="kzt">'+kzSAST(kz.us)+'–'+kzSAST(kz.ue)+' SAST</div>';
+    grid.appendChild(d);
+  });
+}
+
+// ── Fair Value Gaps (CallistoFX: trades FVG retests during Silver Bullet) ─────
+function detectFVG(c){
+  var r=[];
+  for(var i=2;i<c.length;i++){
+    var p=c[i-2], m=c[i-1], n=c[i];
+    if(p.high<n.low){
+      var size=n.low-p.high;
+      var ce=(p.high+n.low)/2; // Consequent Encroachment — 50% of FVG
+      r.push({type:'bull',top:n.low,bot:p.high,ce:ce,size:size,age:c.length-i,idx:i,mitigated:false});
+    }
+    if(p.low>n.high){
+      var size2=p.low-n.high;
+      var ce2=(p.low+n.high)/2;
+      r.push({type:'bear',top:p.low,bot:n.high,ce:ce2,size:size2,age:c.length-i,idx:i,mitigated:false});
+    }
+  }
+  // Mark mitigated FVGs (price returned to 50% CE)
+  var curP=(bid+ask)/2;
+  r.forEach(function(fvg){
+    if(fvg.type==='bull'&&curP<=fvg.ce) fvg.mitigated=true;
+    if(fvg.type==='bear'&&curP>=fvg.ce) fvg.mitigated=true;
+  });
+  return r.filter(function(fvg){return !fvg.mitigated;}).slice(-6);
+}
+
+// ── Order Blocks (CallistoFX: strongest OB before displacement) ───────────────
+function detectOB(c){
+  var r=[];
+  for(var i=1;i<c.length-1;i++){
+    var prev=c[i-1], curr=c[i], next=c[i+1];
+    var displacement=Math.abs(next.close-next.open)/((next.high-next.low)||1);
+    // Only count OBs with strong displacement candle (>50% of body)
+    if(displacement<0.3) continue;
+    if(prev.close<prev.open&&next.close>next.open&&next.close>curr.high)
+      r.push({type:'bull',high:curr.high,low:curr.low,mid:(curr.high+curr.low)/2,
+               idx:i,strength:Math.abs(next.close-next.open),displacement:displacement});
+    if(prev.close>prev.open&&next.close<next.open&&next.close<curr.low)
+      r.push({type:'bear',high:curr.high,low:curr.low,mid:(curr.high+curr.low)/2,
+               idx:i,strength:Math.abs(next.close-next.open),displacement:displacement});
+  }
+  return r.sort(function(a,b){return b.strength-a.strength;}).slice(0,5);
+}
+
+// ── Breaker Blocks (CallistoFX: failed OB that flips to opposite polarity) ───
+function detectBreakerBlocks(c, obs){
+  var curP=(bid+ask)/2;
+  var breakers=[];
+  obs.forEach(function(ob){
+    // Bull OB becomes bear breaker if price closes below its low
+    if(ob.type==='bull'&&curP<ob.low)
+      breakers.push({type:'bear',high:ob.high,low:ob.low,mid:ob.mid,origin:'bullOB_failed'});
+    // Bear OB becomes bull breaker if price closes above its high
+    if(ob.type==='bear'&&curP>ob.high)
+      breakers.push({type:'bull',high:ob.high,low:ob.low,mid:ob.mid,origin:'bearOB_failed'});
+  });
+  return breakers;
+}
+
+// ── Displacement Candles (CallistoFX: explosive momentum candle) ─────────────
+function detectDisplacement(c){
+  if(c.length<3) return null;
+  var last=c[c.length-1];
+  var body=Math.abs(last.close-last.open);
+  var avgBody=0;
+  for(var i=c.length-6;i<c.length-1;i++){
+    if(i>=0) avgBody+=Math.abs(c[i].close-c[i].open);
+  }
+  avgBody/=5;
+  // Displacement = candle body 2x+ average
+  if(body>avgBody*2){
+    return{dir:last.close>last.open?'bull':'bear',body:body,avgBody:avgBody,ratio:body/avgBody};
+  }
+  return null;
+}
+
+// ── Swing Highs/Lows (5-bar fractal) ─────────────────────────────────────────
+function detectSwings(c){
+  var highs=[],lows=[];
+  for(var i=2;i<c.length-2;i++){
+    if(c[i].high>c[i-1].high&&c[i].high>c[i-2].high&&c[i].high>c[i+1].high&&c[i].high>c[i+2].high)
+      highs.push({price:c[i].high,idx:i,time:c[i].time});
+    if(c[i].low<c[i-1].low&&c[i].low<c[i-2].low&&c[i].low<c[i+1].low&&c[i].low<c[i+2].low)
+      lows.push({price:c[i].low,idx:i,time:c[i].time});
+  }
+  return{highs:highs.slice(-5),lows:lows.slice(-5)};
+}
+
+// ── Market Structure (BOS / CHoCH — CallistoFX uses as entry trigger) ─────────
+function detectMSS(c,swings){
+  if(!swings.highs.length||!swings.lows.length) return{dir:'neutral',type:'none'};
+  var curP=(bid+ask)/2;
+  var lastHigh=swings.highs[swings.highs.length-1].price;
+  var lastLow =swings.lows [swings.lows.length -1].price;
+  var prevHigh=swings.highs.length>1?swings.highs[swings.highs.length-2].price:lastHigh;
+  var prevLow =swings.lows.length >1?swings.lows [swings.lows.length -2].price:lastLow;
+  // Also check last candle close for structure break
+  var lastClose=c.length?c[c.length-1].close:curP;
+  if(lastClose>lastHigh||curP>lastHigh){
+    return{dir:'bullish',type:lastHigh>prevHigh?'BOS':'CHoCH',level:lastHigh};
+  }
+  if(lastClose<lastLow||curP<lastLow){
+    return{dir:'bearish',type:lastLow<prevLow?'BOS':'CHoCH',level:lastLow};
+  }
+  return{dir:'neutral',type:'none'};
+}
+
+// ── Liquidity Sweep (CallistoFX Rule 1: No liquidity raid = No trade) ─────────
+function detectLiqSweep(c,swings){
+  if(!c.length) return{swept:false};
+  // Check last 3 candles for a sweep
+  for(var k=Math.max(0,c.length-3);k<c.length;k++){
+    var candle=c[k];
+    for(var i=0;i<swings.highs.length;i++){
+      if(candle.high>swings.highs[i].price&&candle.close<swings.highs[i].price)
+        return{swept:true,side:'sell-side',level:swings.highs[i].price,
+               label:'BSL swept — bearish reversal expected'};
+    }
+    for(var j=0;j<swings.lows.length;j++){
+      if(candle.low<swings.lows[j].price&&candle.close>swings.lows[j].price)
+        return{swept:true,side:'buy-side',level:swings.lows[j].price,
+               label:'SSL swept — bullish reversal expected'};
+    }
+  }
+  return{swept:false};
+}
+
+// ── Equal Highs / Equal Lows (liquidity pools) ────────────────────────────────
+function detectEqualLevels(swings){
+  var eqH=[], eqL=[], tol=0.002;
+  for(var i=0;i<swings.highs.length-1;i++){
+    var diff=Math.abs(swings.highs[i].price-swings.highs[i+1].price)/swings.highs[i].price;
+    if(diff<tol) eqH.push({price:(swings.highs[i].price+swings.highs[i+1].price)/2,type:'equal_high'});
+  }
+  for(var j=0;j<swings.lows.length-1;j++){
+    var diff2=Math.abs(swings.lows[j].price-swings.lows[j+1].price)/swings.lows[j].price;
+    if(diff2<tol) eqL.push({price:(swings.lows[j].price+swings.lows[j+1].price)/2,type:'equal_low'});
+  }
+  return{equalHighs:eqH,equalLows:eqL};
+}
+
+// ── HTF Bias (CallistoFX: D1 direction first, then H4 for entry) ─────────────
+function htfBias(c){
+  if(c.length<20) return'neutral';
+  var sl=c.slice(-20);
+  // Use EMA crossover logic for smoother bias
+  var ema8=0, ema21=0;
+  sl.forEach(function(x,i){
+    var k8=2/9, k21=2/22;
+    ema8 = i===0?x.close:x.close*k8+ema8*(1-k8);
+    ema21= i===0?x.close:x.close*k21+ema21*(1-k21);
+  });
+  if(ema8>ema21*1.0005) return'bullish';
+  if(ema8<ema21*0.9995) return'bearish';
+  return'neutral';
+}
+
+// ── OTE Fibonacci (61.8–79% retracement — CallistoFX primary entry level) ─────
+function inOTE(swings,bias){
+  if(!swings.highs.length||!swings.lows.length) return false;
+  var curP=(bid+ask)/2;
+  var high=swings.highs[swings.highs.length-1].price;
+  var low =swings.lows [swings.lows.length -1].price;
+  var range=high-low; if(range<=0) return false;
+  var retrace=bias==='bullish'?(high-curP)/range:(curP-low)/range;
+  return retrace>=0.618&&retrace<=0.79;
+}
+
+// ── Premium / Discount (CallistoFX: buy discount, sell premium) ───────────────
+function premiumDiscount(swings){
+  if(!swings.highs.length||!swings.lows.length) return'unknown';
+  var curP=(bid+ask)/2;
+  var high=swings.highs[swings.highs.length-1].price;
+  var low =swings.lows [swings.lows.length -1].price;
+  var eq50=(high+low)/2;
+  var eq25=low+(high-low)*0.25; // Extreme discount
+  var eq75=low+(high-low)*0.75; // Extreme premium
+  if(curP<eq25) return'deep_discount';
+  if(curP<eq50) return'discount';
+  if(curP>eq75) return'deep_premium';
+  if(curP>eq50) return'premium';
+  return'equilibrium';
+}
+
+// ── NDOG / NWOG Detection ─────────────────────────────────────────────────────
+// NDOG: gap between 5PM NY close and 6PM NY open (UTC 22:00 - 23:00)
+// NWOG: gap between Friday 5PM close and Monday 6PM open
+function detectOpeningGaps(c){
+  if(c.length<2) return{ndog:null,nwog:null};
+  // Use last candle's open vs previous candle's close as gap proxy
+  var last=c[c.length-1], prev=c[c.length-2];
+  var gapSize=Math.abs(last.open-prev.close);
+  var minGap=0.50; // Gold: 50 cents minimum gap
+  var ndog=null;
+  if(gapSize>minGap){
+    var gapDir=last.open>prev.close?'bull':'bear';
+    var ce=(last.open+prev.close)/2;
+    ndog={type:gapDir,top:Math.max(last.open,prev.close),
+          bot:Math.min(last.open,prev.close),ce:ce,size:gapSize,
+          label:'NDOG '+(gapDir==='bull'?'Bullish':'Bearish')};
+  }
+  return{ndog:ndog,nwog:null};
+}
+
+// ── Power of 3 / AMD Model (CallistoFX core concept) ─────────────────────────
+// Accumulation (Asia) → Manipulation (early session) → Distribution (true move)
+function detectPowerOf3(c,swings){
+  if(c.length<6) return{phase:'unknown',bias:'neutral'};
+  var utcH=new Date().getUTCHours();
+  // Asia session = accumulation phase (22:00-07:00 UTC)
+  var asiaRange={high:0,low:999999};
+  // Use last 8 candles to approximate Asia session range
+  var asiaCandles=c.slice(-8,-2);
+  asiaCandles.forEach(function(x){
+    if(x.high>asiaRange.high) asiaRange.high=x.high;
+    if(x.low<asiaRange.low)   asiaRange.low=x.low;
+  });
+  var curP=(bid+ask)/2;
+  var asiaRangeMid=(asiaRange.high+asiaRange.low)/2;
+  // Judas Swing detection: price breaks Asia range in one direction before reversing
+  var lastCandle=c[c.length-1];
+  var judas=null;
+  if(lastCandle.high>asiaRange.high&&lastCandle.close<asiaRange.high){
+    judas={dir:'bearish',level:asiaRange.high,label:'Judas Swing HIGH — expect bearish reversal'};
+  }
+  if(lastCandle.low<asiaRange.low&&lastCandle.close>asiaRange.low){
+    judas={dir:'bullish',level:asiaRange.low,label:'Judas Swing LOW — expect bullish reversal'};
+  }
+  // Determine AMD phase
+  var phase='accumulation';
+  if(utcH>=7&&utcH<12) phase='manipulation'; // London open — Judas swing
+  if(utcH>=12&&utcH<20) phase='distribution'; // NY — true move
+  return{phase:phase,asiaRange:asiaRange,asiaRangeMid:asiaRangeMid,judas:judas,
+          bias:curP>asiaRangeMid?'bullish':'bearish'};
+}
+
+// ── Mode Parameters ───────────────────────────────────────────────────────────
+// Helper: is current symbol a crypto asset?
+function isBTCSym(){
+  var sym=C.symbol||'';
+  return sym==='BTCUSD#'||sym==='BTCUSD'||sym==='BTCUSDT'||sym==='ETHUSD';
+}
+function getModeParams(){
+  switch(C.mode){
+    // Aggressive: Silver Bullet scalps — CallistoFX 5-step model
+    case'aggressive':return{
+      slBuf:isBTCSym()?150:5, rr:2, minScore:3, riskMult:0.5,
+      label:'⚡ AGGRESSIVE', tf:'1–15 min',
+      kzRequired:false, requireOBorFVG:false,
+      obTol:0.006, useMomentum:true
+    };
+    // Sniper: Full CallistoFX confluence — all factors required
+    case'sniper':return{
+      slBuf:isBTCSym()?500:35, rr:5, minScore:7, riskMult:1.5,
+      label:'🎯 SNIPER', tf:'1–5 days',
+      kzRequired:true, requireOBorFVG:true,
+      obTol:0.002, useMomentum:false
+    };
+    // Normal: CallistoFX standard setup
+    default:return{
+      slBuf:isBTCSym()?250:(C.slBuf||15), rr:C.rr||3, minScore:5, riskMult:1,
+      label:'📊 NORMAL', tf:'10min–4hr',
+      kzRequired:true, requireOBorFVG:true,
+      obTol:0.003, useMomentum:false
+    };
+  }
+}
+
+// Currency helper
+function cur(v){return (C.currency||'R')+v;}
+
+// Lot calculator — handles Gold, BTC, and Forex correctly
+function calcLot(slPoints){
+  if(C.lot>0) return C.lot;
+  if(!bal||!slPoints) return 0.01;
+  var mp  = getModeParams();
+  var sym = C.symbol;
+  var riskAmt = bal * (C.risk * mp.riskMult / 100);
+  var pv;
+  if(sym==='GOLD'||sym==='GOLD#'||sym.startsWith('XAUUSD')){
+    // Gold: $10 per point per lot (1 lot = 100 oz, 1 point = $0.1)
+    pv = slPoints * 10;
+  } else if(sym==='BTCUSD'||sym==='BTCUSDT'){
+    // BTC: $1 per $1 price move per 0.01 lot (micro lot)
+    // For a 0.01 lot: $0.01 per $1 price move
+    pv = slPoints * 0.01;
+  } else if(sym==='ETHUSD'){
+    pv = slPoints * 0.01;
+  } else if(sym==='GBPUSD'||sym==='EURUSD'){
+    pv = (slPoints / 0.0001) * 10;
+  } else {
+    pv = (slPoints / 0.0001) * 1; // ZAR pairs etc.
+  }
+  if(!pv || pv <= 0) return 0.01;
+  var lot = riskAmt / pv;
+  // BTC min lot is usually 0.01, max reasonable is 1
+  var maxLot = (sym==='BTCUSD'||sym==='ETHUSD') ? 1 : 10;
+  return parseFloat(Math.max(0.01, Math.min(lot, maxLot)).toFixed(2));
+}
+
+// ── Full CallistoFX ICT Analysis ──────────────────────────────────────────────
+function runICTAnalysis(){
+  if(candles.length<10) return null;
+  var fvgs       = detectFVG(candles);
+  var obs        = detectOB(candles);
+  var breakers   = detectBreakerBlocks(candles, obs);
+  var swings     = detectSwings(candles);
+  var mss        = detectMSS(candles, swings);
+  var liq        = detectLiqSweep(candles, swings);
+  var eqLevels   = detectEqualLevels(swings);
+  var bias       = htfBias(candles);
+  var kzOn       = anyKZ();
+  var sbOn       = inSilverBullet();
+  var activeSB   = activeSilverBullet();
+  var ote        = inOTE(swings, bias);
+  var pd         = premiumDiscount(swings);
+  var gaps       = detectOpeningGaps(candles);
+  var po3        = detectPowerOf3(candles, swings);
+  var disp       = detectDisplacement(candles);
+
+  // ── CallistoFX 10-Point Confluence Score ──────────────────────
+  var score = 0;
+  // 1. Kill Zone or Silver Bullet active
+  if(kzOn || sbOn) score++;
+  // 2. Silver Bullet specifically (bonus weight)
+  if(sbOn) score++;
+  // 3. Fair Value Gap present
+  if(fvgs.length) score++;
+  // 4. Order Block present
+  if(obs.length) score++;
+  // 5. Market Structure Shift confirmed
+  if(mss.dir!=='neutral') score++;
+  // 6. Liquidity sweep (CallistoFX Rule 1: mandatory)
+  if(liq.swept) score++;
+  // 7. HTF Bias aligned
+  if(bias!=='neutral') score++;
+  // 8. OTE entry zone
+  if(ote) score++;
+  // 9. Premium/Discount correct (buy discount, sell premium)
+  var pdCorrect=(mss.dir==='bullish'&&(pd==='discount'||pd==='deep_discount'))
+             ||(mss.dir==='bearish'&&(pd==='premium'||pd==='deep_premium'));
+  if(pdCorrect) score++;
+  // 10. Power of 3 / Judas Swing confirmation
+  if(po3.judas||(po3.phase==='distribution'&&bias!=='neutral')) score++;
+
+  return{fvgs,obs,breakers,swings,mss,liq,eqLevels,bias,kzOn,sbOn,activeSB,
+         ote,pd,gaps,po3,disp,score};
+}
+
+// ── CallistoFX Signal Builder ─────────────────────────────────────────────────
+// 5-Step Model: 1) Kill Zone 2) Liquidity Sweep 3) MSS 4) FVG/OB Entry 5) Risk
+function buildSignal(a){
+  if(!a) return null;
+  var mp=getModeParams();
+  var curP=(bid+ask)/2;
+  if(!curP||curP<10) return null;
+
+  // Step 1: Score gate
+  if(a.score<mp.minScore) return null;
+
+  // Step 2: Kill Zone (CallistoFX: non-negotiable for Normal/Sniper)
+  if(mp.kzRequired&&!a.kzOn&&!a.sbOn) return null;
+
+  // Step 3: Determine direction
+  var dir=a.mss.dir;
+  // Aggressive: use bias if MSS neutral
+  if(dir==='neutral'){
+    if(C.mode==='aggressive'&&a.bias!=='neutral') dir=a.bias;
+    // Also use Judas Swing direction
+    else if(a.po3&&a.po3.judas) dir=a.po3.judas.dir;
+    else return null;
+  }
+
+  // Step 4: CallistoFX Rule — bias must align with direction (except aggressive)
+  if(C.mode!=='aggressive'&&a.bias!=='neutral'&&a.bias!==dir) return null;
+
+  // Step 5: Premium/Discount filter (CallistoFX: never buy premium, never sell discount)
+  if(C.mode==='sniper'){
+    if(dir==='bullish'&&(a.pd==='premium'||a.pd==='deep_premium')) return null;
+    if(dir==='bearish'&&(a.pd==='discount'||a.pd==='deep_discount')) return null;
+  }
+
+  var tol=mp.obTol||0.003;
+  var entryZone=null, entryType='';
+
+  if(dir==='bullish'){
+    // Priority 1: Price in Silver Bullet FVG (CallistoFX highest probability)
+    var sbFVG=a.fvgs.filter(function(f){
+      return f.type==='bull'&&curP>=f.bot*(1-tol)&&curP<=f.top*(1+tol);
+    });
+    // Priority 2: Bullish OB
+    var bullOB=a.obs.filter(function(o){
+      return o.type==='bull'&&curP>=o.low*(1-tol)&&curP<=o.high*(1+tol);
+    });
+    // Priority 3: Breaker Block
+    var bullBreaker=a.breakers.filter(function(b){
+      return b.type==='bull'&&curP>=b.low*(1-tol)&&curP<=b.high*(1+tol);
+    });
+    // Priority 4: NDOG gap fill
+    var ndogEntry=a.gaps&&a.gaps.ndog&&a.gaps.ndog.type==='bull'
+      &&curP>=a.gaps.ndog.bot&&curP<=a.gaps.ndog.top;
+
+    if(sbFVG.length)      { entryZone=sbFVG[sbFVG.length-1]; entryType='Silver Bullet FVG'; }
+    else if(bullOB.length){ entryZone=bullOB[bullOB.length-1]; entryType='Order Block'; }
+    else if(bullBreaker.length){ entryZone=bullBreaker[0]; entryType='Breaker Block'; }
+    else if(ndogEntry)    { entryZone=a.gaps.ndog; entryType='NDOG Gap'; }
+    else if(mp.useMomentum&&a.disp&&a.disp.dir==='bull'){ entryType='Displacement'; }
+    else return null;
+
+    var slBase=entryZone?((entryZone.low||entryZone.bot)||curP-mp.slBuf)
+                         :a.swings.lows.length?a.swings.lows[a.swings.lows.length-1].price:curP-mp.slBuf;
+    var sl=parseFloat((slBase-mp.slBuf).toFixed(2));
+    var slPts=Math.abs(curP-sl);
+    if(slPts<0.1) return null;
+    var tp=parseFloat((curP+slPts*mp.rr).toFixed(2));
+    return{dir:'buy',entry:curP.toFixed(2),sl:sl,tp:tp,lot:calcLot(slPts),
+           score:a.score,mode:mp.label,tf:mp.tf,rr:mp.rr,
+           reason:entryType,mss:a.mss.type,pd:a.pd,
+           sb:a.sbOn,sbName:a.activeSB?a.activeSB.name:''};
+  }
+
+  if(dir==='bearish'){
+    var sbFVG2=a.fvgs.filter(function(f){
+      return f.type==='bear'&&curP>=f.bot*(1-tol)&&curP<=f.top*(1+tol);
+    });
+    var bearOB=a.obs.filter(function(o){
+      return o.type==='bear'&&curP>=o.low*(1-tol)&&curP<=o.high*(1+tol);
+    });
+    var bearBreaker=a.breakers.filter(function(b){
+      return b.type==='bear'&&curP>=b.low*(1-tol)&&curP<=b.high*(1+tol);
+    });
+    var ndogEntry2=a.gaps&&a.gaps.ndog&&a.gaps.ndog.type==='bear'
+      &&curP>=a.gaps.ndog.bot&&curP<=a.gaps.ndog.top;
+
+    if(sbFVG2.length)      { entryZone=sbFVG2[sbFVG2.length-1]; entryType='Silver Bullet FVG'; }
+    else if(bearOB.length) { entryZone=bearOB[bearOB.length-1]; entryType='Order Block'; }
+    else if(bearBreaker.length){ entryZone=bearBreaker[0]; entryType='Breaker Block'; }
+    else if(ndogEntry2)    { entryZone=a.gaps.ndog; entryType='NDOG Gap'; }
+    else if(mp.useMomentum&&a.disp&&a.disp.dir==='bear'){ entryType='Displacement'; }
+    else return null;
+
+    var slBase2=entryZone?((entryZone.high||entryZone.top)||curP+mp.slBuf)
+                          :a.swings.highs.length?a.swings.highs[a.swings.highs.length-1].price:curP+mp.slBuf;
+    var sl2=parseFloat((slBase2+mp.slBuf).toFixed(2));
+    var slPts2=Math.abs(sl2-curP);
+    if(slPts2<0.1) return null;
+    var tp2=parseFloat((curP-slPts2*mp.rr).toFixed(2));
+    return{dir:'sell',entry:curP.toFixed(2),sl:sl2,tp:tp2,lot:calcLot(slPts2),
+           score:a.score,mode:mp.label,tf:mp.tf,rr:mp.rr,
+           reason:entryType,mss:a.mss.type,pd:a.pd,
+           sb:a.sbOn,sbName:a.activeSB?a.activeSB.name:''};
+  }
+  return null;
+}
+</script>
+<script>
+// ════════════════════════════════════════════════════════════
+//  UI LAYER — Display, Popups, Notifications
+// ════════════════════════════════════════════════════════════
+
+var G=function(id){return document.getElementById(id);};
+function g(id){return document.getElementById(id);}
+function st(id,v){var e=G(id);if(e)e.textContent=v;}
+
+// Tabs
+function goTab(id){
+  document.querySelectorAll('.pane').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('.navbtn').forEach(function(b){b.classList.remove('on');});
+  var p=G('pane-'+id),t=G('tb-'+id);
+  if(p)p.classList.add('on'); if(t)t.classList.add('on');
+  if(id==='edu'){ renderEdu(); }
+}
+
+// Log
+var logLines=[];
+function addLog(msg,col){
+  var box=G('logbox'); if(!box) return;
+  var t=new Date().toLocaleTimeString('en-ZA');
+  var cls=col==='g'?'log-g':col==='r'?'log-r':col==='y'?'log-y':col==='b'?'log-b':'';
+  logLines.push('<div><span style="color:#333">['+t+']</span> <span class="'+cls+'">'+msg+'</span></div>');
+  if(logLines.length>200) logLines=logLines.slice(-200);
+  box.innerHTML=logLines.join('');
+  box.scrollTop=box.scrollHeight;
+}
+function clearLog(){logLines=[];var b=G('logbox');if(b)b.innerHTML='';}
+
+// Connection status
+function setOnline(ok){
+  var d=G('connDot'),l=G('connLabel'),banner=G('reconnectBanner');
+  if(d){d.className='on'+(ok?'':''); if(!ok)d.classList.add('err');}
+  if(l)l.textContent=ok?'Live':'Error';
+  connected=ok;
+  if(banner)banner.style.display=ok?'none':'block';
+}
+
+// Popup notification system
+var popQueue=[],popShowing=false;
+function showPopup(title,body,color,dur){
+  popQueue.push({title,body,color:color||'var(--gold)',dur:dur||6000});
+  if(!popShowing) nextPopup();
+}
+function nextPopup(){
+  if(!popQueue.length){popShowing=false;return;}
+  popShowing=true;
+  var p=popQueue.shift();
+  var ov=document.createElement('div');
+  ov.className='popup-overlay';
+  var icon=p.color.includes('green')||p.color==='#00e676'?'💰':
+            p.color.includes('red')  ||p.color==='#ff3d57'?'🛑':'⚡';
+  ov.innerHTML='<div class="popup-box" style="border:2px solid '+p.color+';box-shadow:0 0 40px '+p.color+'33">'
+    +'<div class="popup-icon">'+icon+'</div>'
+    +'<div class="popup-title" style="color:'+p.color+'">'+p.title+'</div>'
+    +'<div class="popup-body">'+p.body+'</div>'
+    +'<button class="popup-btn" style="background:'+p.color+';color:#000" onclick="this.closest(\'.popup-overlay\').remove();popShowing=false;nextPopup()">OK</button>'
+    +'</div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click',function(e){if(e.target===ov){ov.remove();popShowing=false;nextPopup();}});
+  setTimeout(function(){if(ov.parentNode){ov.remove();popShowing=false;nextPopup();}},p.dur);
+}
+
+// Native notification
+var notifGranted=false;
+async function requestNotifPermission(){
+  if(!('Notification'in window)) return;
+  if(Notification.permission==='granted'){notifGranted=true;return;}
+  var r=await Notification.requestPermission();
+  notifGranted=r==='granted';
+}
+// sound=true  → plays sound + vibrates (trade events only)
+// sound=false → silent update, no sound (status/keepalive only)
+function sendNotif(title,body,tag,sound){
+  if(!notifGranted) return;
+  var withSound = (sound===true);
+  if('serviceWorker'in navigator){
+    navigator.serviceWorker.ready.then(function(reg){
+      reg.showNotification(title,{
+        body:body,icon:'/icon.png',badge:'/badge.png',
+        tag:tag||'ictbot',
+        renotify:withSound,        // only re-notify (sound) on trade events
+        silent:!withSound,         // silent for status pings
+        requireInteraction:withSound, // stays until dismissed for trade alerts
+        vibrate:withSound?[200,100,200]:[],
+        actions:[{action:'open',title:'📊 Open'},{action:'stop',title:'⏹ Stop'}]
+      });
+    }).catch(function(){});
+  }
+}
+
+// Signal display
+function showSignal(sig){
+  var box=G('sigBox'),det=G('sigDetail');
+  if(!box||!det) return;
+  if(!sig){
+    box.className=''; box.textContent='⏳ AWAITING SETUP';
+    det.innerHTML='<span style="color:var(--text3)">Scanning market structure, FVGs, Order Blocks and liquidity…</span>';
+    return;
+  }
+  var mp=getModeParams();
+  box.className=sig.dir==='buy'?'buy':'sell';
+  box.textContent=(sig.dir==='buy'?'🟢 BUY':'🔴 SELL')+' SIGNAL — '+C.symbol+' ['+mp.label+']';
+  var sbLabel=sig.sb?(' 🥇 <b style="color:var(--gold)">'+(sig.sbName||'Silver Bullet')+'</b>'):'';
+  det.innerHTML=
+    'Mode: <b style="color:var(--gold)">'+mp.label+'</b>'+sbLabel+'<br>'
+    +'Reason: <b style="color:var(--gold)">'+(sig.reason||'ICT')+'</b>'
+    +' | MSS: <b>'+sig.mss+'</b> | Zone: <b>'+(sig.pd&&sig.pd.includes('discount')?'🟢 Discount':'🔴 Premium')+'</b><br>'
+    +'Entry: <b>'+sig.entry+'</b>'
+    +' | SL: <b style="color:var(--red)">'+sig.sl+'</b>'
+    +' | TP: <b style="color:var(--green)">'+sig.tp+'</b><br>'
+    +'Lot: <b>'+sig.lot+'</b> | Score: <b>'+sig.score+'/10</b> | RR: <b>1:'+sig.rr+'</b>';
+}
+
+// Update ICT checklist
+function updateChecklist(a){
+  if(!a) return;
+  function setTag(id,text,cls){var e=G(id);if(!e)return;e.textContent=text;e.className='tag '+cls;}
+  // CallistoFX 10-point checklist
+  setTag('ck-sb',  a.sbOn?(a.activeSB?a.activeSB.label:'Active'):'Inactive', a.sbOn?'tg':'tn');
+  setTag('ck-kz',  a.kzOn?'Active':'No',    a.kzOn?'tg':'tn');
+  setTag('ck-liq', a.liq.swept?('✅ '+a.liq.side):'No sweep', a.liq.swept?'tg':'tr');
+  setTag('ck-ms',  a.mss.dir+(a.mss.type!=='none'?' ('+a.mss.type+')':''), a.mss.dir==='bullish'?'tg':a.mss.dir==='bearish'?'tr':'tn');
+  setTag('ck-fvg', a.fvgs.length?('×'+a.fvgs.length+' '+(a.fvgs[a.fvgs.length-1].type)+' FVG'):'None', a.fvgs.length?'ty':'tn');
+  setTag('ck-ob',  a.obs.length?('×'+a.obs.length+' '+(a.obs[0].type)+' OB'):'None', a.obs.length?'ty':'tn');
+  setTag('ck-brk', (a.breakers&&a.breakers.length)?('×'+a.breakers.length):'None', (a.breakers&&a.breakers.length)?'ty':'tn');
+  setTag('ck-bias',a.bias, a.bias==='bullish'?'tg':a.bias==='bearish'?'tr':'tn');
+  setTag('ck-ote', a.ote?'In OTE (61.8-79%)':'Outside', a.ote?'tg':'tn');
+  var pdLabel=a.pd||'—'; var pdCls=a.pd&&a.pd.includes('discount')?'tg':a.pd&&a.pd.includes('premium')?'tr':'tn';
+  setTag('ck-pd',  pdLabel, pdCls);
+  var po3Label=a.po3?a.po3.phase+(a.po3.judas?' ⚡ JUDAS':''):'—';
+  var po3Cls=a.po3&&a.po3.judas?'tg':a.po3&&a.po3.phase==='distribution'?'ty':'tn';
+  setTag('ck-po3', po3Label, po3Cls);
+
+  // Score ring
+  var pct=Math.round((a.score/10)*100);
+  var ring=G('scoreRing');
+  if(ring) ring.style.background='conic-gradient(var(--gold) '+pct+'%, var(--bg4) '+pct+'%)';
+  st('scoreNum',a.score);
+  var lbl=G('scoreLabel');
+  if(lbl) lbl.textContent=a.score>=6?'🔥 High confluence — strong setup':a.score>=4?'⚡ Moderate — wait for confirmation':'⏳ Low confluence — skip this setup';
+}
+
+// Update zones panel
+function updateZones(a){
+  var el=G('zonesEl'); if(!el||!a) return;
+  var curP=(bid+ask)/2;
+  var html='';
+
+  // Silver Bullet banner
+  if(a.sbOn&&a.activeSB){
+    html+='<div style="background:rgba(240,185,11,.12);border:1px solid var(--gold);border-radius:8px;padding:8px;margin-bottom:8px;font-size:.75rem">'
+      +'<b style="color:var(--gold)">🥇 '+a.activeSB.label+' ACTIVE</b><br>'
+      +'<span style="color:var(--text2)">Prime CallistoFX window — watch for FVG retest after liquidity sweep.</span></div>';
+  }
+
+  // Power of 3
+  if(a.po3){
+    var po3Col=a.po3.phase==='distribution'?'var(--green)':a.po3.phase==='manipulation'?'var(--red)':'var(--text3)';
+    html+='<div style="color:var(--gold);font-size:.68rem;font-weight:700;margin-bottom:4px;letter-spacing:.5px">⚡ POWER OF 3</div>';
+    html+='<div style="font-size:.73rem;padding:5px 7px;background:var(--bg4);border-radius:6px;margin-bottom:8px">'
+      +'Phase: <b style="color:'+po3Col+'">'+a.po3.phase.toUpperCase()+'</b>';
+    if(a.po3.judas) html+=' | <b style="color:var(--red)">⚡ JUDAS: '+a.po3.judas.label+'</b>';
+    if(a.po3.asiaRange&&a.po3.asiaRange.high>0)
+      html+='<br><span style="color:var(--text3)">Asia Range: '+a.po3.asiaRange.low.toFixed(2)+' – '+a.po3.asiaRange.high.toFixed(2)+'  Mid: '+a.po3.asiaRangeMid.toFixed(2)+'</span>';
+    html+='</div>';
+  }
+
+  // FVGs with CE
+  if(a.fvgs.length){
+    html+='<div style="color:var(--gold);font-size:.68rem;font-weight:700;margin-bottom:4px;letter-spacing:.5px">📊 FAIR VALUE GAPS</div>';
+    a.fvgs.slice(-4).forEach(function(f){
+      var near=curP&&curP>=f.bot*0.998&&curP<=f.top*1.002;
+      html+='<div class="zone-item" style="'+(near?'border-left:2px solid var(--gold);padding-left:6px':'')+'"">'
+        +(f.type==='bull'?'🟢':'🔴')+' '+(f.type==='bull'?'Bull':'Bear')+' FVG '+f.bot.toFixed(2)+' – '+f.top.toFixed(2)
+        +' <span style="color:var(--text3)">CE:'+f.ce.toFixed(2)+'</span>'+(near?' <b style="color:var(--gold)">◄</b>':'')+'</div>';
+    });
+  }
+
+  // Order Blocks
+  if(a.obs.length){
+    html+='<div style="color:var(--gold);font-size:.68rem;font-weight:700;margin:6px 0 4px;letter-spacing:.5px">📦 ORDER BLOCKS</div>';
+    a.obs.slice(0,4).forEach(function(o){
+      var near=curP&&curP>=o.low*0.998&&curP<=o.high*1.002;
+      html+='<div class="zone-item" style="'+(near?'border-left:2px solid var(--gold);padding-left:6px':'')+'"">'
+        +(o.type==='bull'?'🟢':'🔴')+' '+(o.type==='bull'?'Bull':'Bear')+' OB '+o.low.toFixed(2)+' – '+o.high.toFixed(2)
+        +' <span style="color:var(--text3)">Mid:'+o.mid.toFixed(2)+'</span>'+(near?' <b style="color:var(--gold)">◄</b>':'')+'</div>';
+    });
+  }
+
+  // Breaker Blocks
+  if(a.breakers&&a.breakers.length){
+    html+='<div style="color:var(--gold);font-size:.68rem;font-weight:700;margin:6px 0 4px;letter-spacing:.5px">🔲 BREAKER BLOCKS</div>';
+    a.breakers.forEach(function(b){
+      html+='<div class="zone-item" style="color:var(--purple)">'
+        +(b.type==='bull'?'🟢':'🔴')+' '+b.type.charAt(0).toUpperCase()+b.type.slice(1)+' Breaker '+b.low.toFixed(2)+' – '+b.high.toFixed(2)+'</div>';
+    });
+  }
+
+  // NDOG gap
+  if(a.gaps&&a.gaps.ndog){
+    html+='<div style="color:var(--gold);font-size:.68rem;font-weight:700;margin:6px 0 4px;letter-spacing:.5px">📅 NDOG</div>';
+    var nd=a.gaps.ndog;
+    html+='<div class="zone-item">'+(nd.type==='bull'?'🟢':'🔴')+' '+nd.label
+      +': '+nd.bot.toFixed(2)+' – '+nd.top.toFixed(2)+' CE:'+nd.ce.toFixed(2)+'</div>';
+  }
+
+  // Swing levels + equal highs/lows
+  if(a.swings.highs.length||a.swings.lows.length){
+    html+='<div style="color:var(--gold);font-size:.68rem;font-weight:700;margin:6px 0 4px;letter-spacing:.5px">📐 KEY LEVELS</div>';
+    if(a.swings.highs.length) html+='<div class="zone-item">🔺 BSL: '+a.swings.highs.map(function(h){return h.price.toFixed(2);}).join(' | ')+'</div>';
+    if(a.swings.lows.length)  html+='<div class="zone-item">🔻 SSL: '+a.swings.lows.map(function(l){return l.price.toFixed(2);}).join(' | ')+'</div>';
+    if(a.eqLevels){
+      if(a.eqLevels.equalHighs.length) html+='<div class="zone-item" style="color:var(--red)">≈ Equal Highs (BSL pool): '+a.eqLevels.equalHighs.map(function(h){return h.price.toFixed(2);}).join(', ')+'</div>';
+      if(a.eqLevels.equalLows.length)  html+='<div class="zone-item" style="color:var(--green)">≈ Equal Lows (SSL pool): '+a.eqLevels.equalLows.map(function(l){return l.price.toFixed(2);}).join(', ')+'</div>';
+    }
+  }
+
+  el.innerHTML=html||'No zones detected. Start the bot.';
+
+  // Market structure panel
+  var ms=G('msEl');
+  if(ms) ms.innerHTML='<b>MSS:</b> '+a.mss.dir+(a.mss.type!=='none'?' ('+a.mss.type+')':'')+'<br>'
+    +'<b>HTF Bias:</b> '+a.bias+'<br>'
+    +'<b>Zone:</b> '+(a.pd&&a.pd.includes('discount')?'🟢 '+a.pd.replace('_',' '):'🔴 '+(a.pd||'unknown'))+'<br>'
+    +'<b>Liquidity:</b> '+(a.liq.swept?'✅ Swept '+a.liq.side+' @ '+(a.liq.level||'').toFixed(2):'No recent sweep')+'<br>'
+    +(a.disp?'<b>Displacement:</b> '+a.disp.dir+' candle ('+a.disp.ratio.toFixed(1)+'x avg)<br>':'')
+    +(a.po3&&a.po3.judas?'<b style="color:var(--red)">⚡ JUDAS SWING detected!</b>':'');
+}
+
+// Render positions
+function renderPositions(){
+  var el=G('posEl'); if(!el) return;
+  var oc=G('openCard');
+  var pill=G('activeTradePill');
+  var totalPnlEl=G('totalFloatPnl');
+  var elOT=G('elOpenTrades');
+
+  // Always update the counter metric in dashboard
+  if(elOT){
+    var cnt=openTrades.length, mx=parseInt(C.maxT)||1;
+    elOT.innerHTML='<span style="color:'+(cnt>0?'var(--blue)':'var(--text3)')+'">'+cnt+'</span><span style="color:var(--text3);font-size:.75em"> / '+mx+'</span>';
+  }
+
+  if(!openTrades.length){
+    el.innerHTML='<div style="color:var(--text3);font-size:.78rem;padding:6px 0;text-align:center">No open positions</div>';
+    if(oc) oc.style.display='none';
+    if(pill) pill.textContent='0';
+    if(totalPnlEl){ totalPnlEl.textContent='P&L —'; totalPnlEl.style.color='var(--text3)'; }
+    return;
+  }
+
+  // Show the card
+  if(oc) oc.style.display='block';
+
+  // Aggregate P&L
+  var totalPnl=openTrades.reduce(function(s,t){return s+(parseFloat(t.profit)||0);},0);
+  var pnlCol=totalPnl>=0?'var(--green)':'var(--red)';
+  if(pill) pill.textContent=openTrades.length;
+  if(totalPnlEl){
+    totalPnlEl.textContent=(totalPnl>=0?'+':'')+cur(totalPnl.toFixed(2));
+    totalPnlEl.style.color=pnlCol;
+  }
+
+  var curP=(bid+ask)/2;
+  var sym=C.symbol;
+  var isBTCsym=(sym==='BTCUSD'||sym==='ETHUSD');
+
+  el.innerHTML=openTrades.map(function(t){
+    var profit=parseFloat(t.profit)||0;
+    var isBuy=t.type&&t.type.includes('BUY');
+    var dirCol=isBuy?'var(--green)':'var(--red)';
+    var pCol=profit>=0?'var(--green)':'var(--red)';
+    var entry=parseFloat(t.openPrice)||0;
+    var sl=parseFloat(t.stopLoss)||0;
+    var tp=parseFloat(t.takeProfit)||0;
+
+    // Progress bar — how far price moved from entry toward TP
+    var progress=0, progCol='var(--text3)';
+    if(tp&&sl&&entry&&curP){
+      var totalMove=Math.abs(tp-entry);
+      var doneMove=isBuy?(curP-entry):(entry-curP);
+      progress=totalMove>0?Math.max(0,Math.min(100,(doneMove/totalMove)*100)):0;
+      progCol=profit>=0?'var(--green)':'var(--red)';
+    }
+
+    // Points moved (Gold = per $0.1 = 1 pip; BTC = per $1)
+    var pips=entry>0?((isBuy?(curP-entry):(entry-curP))*(isBTCsym?1:10)).toFixed(1):0;
+    var pipLabel=isBTCsym?'pts':'pips';
+
+    return '<div style="background:var(--bg4);border-radius:10px;padding:11px 12px;margin-bottom:8px;'
+      +'border-left:3px solid '+dirCol+';border:1px solid var(--border)">'
+
+      // Row 1: Direction + P&L
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+        +'<div style="display:flex;align-items:center;gap:7px">'
+          +'<span style="font-family:var(--display);font-size:.85rem;font-weight:700;color:'+dirCol+'">'+(isBuy?'▲ BUY':'▼ SELL')+'</span>'
+          +'<span style="font-size:.65rem;padding:2px 7px;border-radius:20px;'
+            +'background:'+(isBuy?'rgba(0,200,83,.12)':'rgba(255,61,87,.12)')+';'
+            +'color:'+dirCol+';border:1px solid '+dirCol+'">'+(t.volume||0)+' lot</span>'
+        +'</div>'
+        +'<div style="text-align:right">'
+          +'<div style="font-family:var(--mono);font-size:.88rem;font-weight:700;color:'+pCol+'">'+(profit>=0?'+':'')+cur(profit.toFixed(2))+'</div>'
+          +'<div style="font-size:.62rem;color:'+(parseFloat(pips)>=0?'var(--green)':'var(--red)')+'">'+pips+' '+pipLabel+'</div>'
+        +'</div>'
+      +'</div>'
+
+      // Progress bar toward TP
+      +'<div style="background:var(--border);border-radius:4px;height:4px;overflow:hidden;margin-bottom:7px">'
+        +'<div style="width:'+progress.toFixed(1)+'%;height:4px;border-radius:4px;background:'+progCol+';transition:width .5s"></div>'
+      +'</div>'
+
+      // Row 2: Entry / Current / SL / TP
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:.68rem;font-family:var(--mono);margin-bottom:8px">'
+        +'<div style="color:var(--text3)">Entry <span style="color:var(--text2)">'+entry.toFixed(isBTCsym?0:2)+'</span></div>'
+        +'<div style="color:var(--text3)">Now <span style="color:'+dirCol+'">'+(curP?curP.toFixed(isBTCsym?0:2):'—')+'</span></div>'
+        +'<div style="color:var(--text3)">SL <span style="color:var(--red)">'+(sl||'—')+'</span></div>'
+        +'<div style="color:var(--text3)">TP <span style="color:var(--green)">'+(tp||'—')+'</span></div>'
+      +'</div>'
+
+      // Row 3: Individual close button
+      +'<button onclick="closeSingleTrade('+t.id+')" '
+        +'style="width:100%;padding:7px;border-radius:8px;border:none;'
+        +'background:rgba(255,61,87,.15);color:var(--red);'
+        +'font-family:var(--font);font-size:.75rem;font-weight:600;'
+        +'cursor:pointer;letter-spacing:.3px">'
+        +'✕ Close This Trade'
+      +'</button>'
+    +'</div>';
+  }).join('');
+}
+
+// Trade monitor — detect SL/TP hits
+function monitorPositions(positions){
+  var cur2=(bid+ask)/2;
+  positions.forEach(function(pos){
+    if(!monitoredTrades[pos.id])
+      monitoredTrades[pos.id]={sl:pos.stopLoss,tp:pos.takeProfit,dir:pos.type,lot:pos.volume,entry:pos.openPrice};
+  });
+  Object.keys(monitoredTrades).forEach(function(id){
+    if(positions.some(function(p){return p.id==id;})) return;
+    var t=monitoredTrades[id],sl=parseFloat(t.sl),tp=parseFloat(t.tp);
+    var isBuy=t.dir&&t.dir.includes('BUY');
+    // Determine TP vs SL by trade direction and stored levels (not current price)
+  var hitTP = isBuy ? (tp > parseFloat(t.entry||0)) : (tp < parseFloat(t.entry||0));
+    var result=hitTP?'TP HIT ✅':'SL HIT ❌';
+    var color=hitTP?'var(--green)':'var(--red)';
+    showPopup((hitTP?'💰':'🛑')+' TRADE '+result,
+      (t.dir||'?')+' '+t.lot+' lot @ '+t.entry+'<br>SL: <b>'+t.sl+'</b> | TP: <b>'+t.tp+'</b><br>'
+      +(hitTP?'<span style="color:var(--green)">Target reached! 🎉</span>':'<span style="color:var(--red)">Stop loss triggered.</span>'),
+      color,12000);
+    sendNotif((hitTP?'💰':'🛑')+' ICT Gold Bot — '+result,
+      (t.dir||'')+' '+t.lot+' lot | Entry:'+t.entry+' SL:'+t.sl+' TP:'+t.tp,
+      'trade-result', true);
+    addLog(result+' — '+(t.dir||'')+' '+t.lot+' lot',hitTP?'g':'r');
+    delete monitoredTrades[id];
+  });
+}
+
+// Stats
+function updateStats(){
+  var total=wins+losses,wr=total>0?((wins/total)*100).toFixed(1)+'%':'—';
+  st('elWR',wr);st('hW',wins);st('hL',losses);st('hWR',wr);
+  st('hPnl',cur(pnl.toFixed(2)));st('hTrades',total);
+  updateFloatPanel();
+}
+
+// Float panel
+function toggleFloat(){ /* widget removed */ }
+function updateFloatPanel(){
+  // Update dashboard open trades counter
+  var elOT=G('elOpenTrades');
+  if(elOT){
+    var count=openTrades.length, max=C.maxT||1;
+    elOT.innerHTML='<span style="color:'+(count>=max?'var(--red)':'var(--green)')+'">'+count+'</span> / '+max;
+  }
+  var em=G('elMode'); if(em) em.textContent=getModeParams().label;
+}
+
+// Mode description
+function updateModeDesc(){
+  var m=G('cfgMode')?G('cfgMode').value:'normal';
+  var desc={
+    aggressive:'<b style="color:var(--red)">⚡ Aggressive:</b> Enters quickly on any valid ICT setup within kill zones. Tight 1.5:1 RR, small SL. Best during high-volatility London/NY opens. Uses 50% of configured risk per trade.',
+    sniper:'<b style="color:var(--green)">🎯 Sniper:</b> Only the highest-confluence setups (6/7). Wide SL gives trades room to breathe over days. 5:1 RR means one win recovers multiple losses. Best for patient traders.',
+    normal:'<b style="color:var(--gold)">📊 Normal:</b> Standard ICT setups during kill zones. Balanced 3:1 RR. Requires 5/7 confluence. Most reliable mode for consistent results.'
+  };
+  var el=G('modeDesc');
+  if(el) el.innerHTML=desc[m]||desc.normal;
+}
+</script>
+<script>
+// ════════════════════════════════════════════════════════════
+//  SETTINGS, WAKE LOCK, SERVICE WORKER, BACKGROUND
+// ════════════════════════════════════════════════════════════
+
+function loadCfg(){
+  try{var s=localStorage.getItem('ictgold_v4');if(s)Object.assign(C,JSON.parse(s));}catch(e){}
+  var fields={cfgToken:'token',cfgAccId:'accId',cfgRegion:'region',cfgSymbol:'symbol',
+    cfgCurrency:'currency',cfgMode:'mode',cfgRisk:'risk',cfgDD:'dd',cfgMaxT:'maxT',
+    cfgMinScore:'minScore',cfgLot:'lot',cfgSLBuf:'slBuf',cfgRR:'rr',
+    cfgSession:'session',cfgBroker:'broker'};
+  Object.keys(fields).forEach(function(id){var e=G(id);if(e)e.value=C[fields[id]]||'';});
+  updateModeDesc();
+  setTimeout(onBrokerChange,50); // update broker hint on load
+  setTimeout(updateSymLabel,60);  // update dashboard symbol label on load
+  var em2=G('elMode'); if(em2) em2.textContent=getModeParams().label;
+  var elMT3=G('elMaxTrades'); if(elMT3) elMT3.textContent=C.maxT||1;
+}
+
+function saveSettings(){
+  C.token    =G('cfgToken')   ?G('cfgToken').value.trim():'';
+  C.accId    =G('cfgAccId')   ?G('cfgAccId').value.trim():'';
+  C.region   =G('cfgRegion')  ?G('cfgRegion').value:'auto';
+  C.symbol   =G('cfgSymbol')  ?G('cfgSymbol').value:'GOLD#';
+  updateSymLabel();
+  C.currency =G('cfgCurrency')?G('cfgCurrency').value:'R';
+  C.mode     =G('cfgMode')    ?G('cfgMode').value:'normal';
+  C.risk     =parseFloat(G('cfgRisk')    ?G('cfgRisk').value:1)||1;
+  C.dd       =parseFloat(G('cfgDD')      ?G('cfgDD').value:5)||5;
+  C.maxT     =parseInt(  G('cfgMaxT')    ?G('cfgMaxT').value:1)||1;
+  C.minScore =parseInt(  G('cfgMinScore')?G('cfgMinScore').value:5)||5;
+  C.lot      =parseFloat(G('cfgLot')     ?G('cfgLot').value:0)||0;
+  C.slBuf    =parseFloat(G('cfgSLBuf')   ?G('cfgSLBuf').value:15)||15;
+  C.rr       =parseFloat(G('cfgRR')      ?G('cfgRR').value:3)||3;
+  C.session  =G('cfgSession') ?G('cfgSession').value:'both';
+  C.broker   = G('cfgBroker')?G('cfgBroker').value:'xm';
+
+  try{localStorage.setItem('ictgold_v4',JSON.stringify(C));}catch(e){}
+  addLog('Settings saved.','y');
+  updateModeDesc();
+  var mp=G('modePill');
+  if(mp){mp.textContent=getModeParams().label;mp.style.display='inline-block';}
+  showPopup('✅ Saved','Settings saved successfully!','var(--gold)',3000);
+}
+
+// Mode description auto-update
+if(G('cfgMode')) G('cfgMode').addEventListener('change',updateModeDesc);
+
+// Test connection
+async function testConn(){
+  var token=G('cfgToken')?G('cfgToken').value.trim():'';
+  var accId=G('cfgAccId')?G('cfgAccId').value.trim():'';
+  if(!token||!accId){showPopup('⚠️ Missing Fields','Enter your MetaAPI Token and Account ID first.','var(--gold)',5000);return;}
+  C.token=token;C.accId=accId;
+  C.region=G('cfgRegion')?G('cfgRegion').value:'auto';
+  var btn=G('testBtn');
+  if(btn){btn.textContent='Testing…';btn.disabled=true;}
+  addLog('Testing connection…','y');
+  try{
+    await autoDetectRegion();
+    var d=await withTimeout(mFetch('/account-information'),12000);
+    setOnline(true);
+    addLog('Connected! Balance: '+cur((d.balance||0).toFixed(2)),'g');
+    showPopup('✅ Connected!',
+      'Balance: <b>'+cur((d.balance||0).toFixed(2))+'</b><br>'
+      +'Equity: <b>'+cur((d.equity||0).toFixed(2))+'</b><br>'
+      +'Region: <b>'+detectedRegion+'</b><br><br>Press Start Bot to begin!',
+      'var(--green)',10000);
+  }catch(e){
+    setOnline(false);
+    addLog('Connection failed: '+e.message,'r');
+    showPopup('❌ Connection Failed',
+      e.message+'<br><br>Check your Token and Account ID at <b>metaapi.cloud</b>',
+      'var(--red)',10000);
+  }finally{
+    if(btn){btn.textContent='🔗 Test Connection';btn.disabled=false;}
+  }
+}
+
+// ── Wake Lock ─────────────────────────────────────────────────────────────────
+var wakeLock=null;
+async function requestWakeLock(){
+  try{
+    if('wakeLock'in navigator&&document.visibilityState==='visible'){
+      wakeLock=await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release',function(){if(running&&document.visibilityState==='visible')requestWakeLock();});
+      var wb=G('wakeBadge');if(wb){wb.textContent='⚡ On';wb.className='on';}
+    }
+  }catch(e){}
+}
+async function releaseWakeLock(){
+  try{if(wakeLock){await wakeLock.release();wakeLock=null;}}catch(e){}
+  var wb=G('wakeBadge');if(wb){wb.textContent='⚡ BG';wb.className='on';}
+}
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible'){
+    if(running){
+      requestWakeLock();
+      // Run analysis immediately when returning to app (don't wait 60s)
+      addLog('App resumed — refreshing…','y');
+      runAnalysis().catch(function(){});
+    } else {
+      // Check if we should auto-resume (bot was killed in background)
+      var wasRunning=false;
+      try{wasRunning=localStorage.getItem('ictbot_running')==='1';}catch(e){}
+      if(wasRunning && C.token && C.accId && !running){
+        addLog('Reconnecting after background suspension…','y');
+        toggleBot();
+      }
+    }
+  }
+});
+
+// ── Service Worker ────────────────────────────────────────────────────────────
+if('serviceWorker'in navigator){
+  navigator.serviceWorker.register('/sw.js').then(function(reg){
+    addLog('Background worker registered.','g');
+    navigator.serviceWorker.addEventListener('message',function(e){
+      if(!e.data) return;
+      if(e.data.type==='STOP_BOT'&&running) stopBot();
+    });
+  }).catch(function(){});
+}
+
+// Background ping — keeps SW alive, updates status notification
+function startBgPing(){
+  if(bgPingTimer) clearInterval(bgPingTimer);
+  bgPingTimer=setInterval(function(){
+    if(!running) return;
+    var sigText=G('sigBox')?G('sigBox').textContent:'Scanning…';
+    sendNotif('⚡ ICT Gold Bot — 🟢 Running',sigText.substring(0,60)+' | Trades: '+openTrades.length,'ictbot-status',false); // silent status
+    if(navigator.serviceWorker&&navigator.serviceWorker.controller){
+      navigator.serviceWorker.controller.postMessage({
+        type:'BOT_PING',running:true,bal:bal,
+        config:{token:C.token,accId:C.accId,region:detectedRegion,symbol:C.symbol}
+      });
+    }
+  },30000);
+}
+function stopBgPing(){
+  if(bgPingTimer){clearInterval(bgPingTimer);bgPingTimer=null;}
+  if('serviceWorker'in navigator){
+    navigator.serviceWorker.ready.then(function(reg){
+      reg.getNotifications({tag:'ictbot-status'}).then(function(ns){ns.forEach(function(n){n.close();});});
+    }).catch(function(){});
+  }
+}
+
+// ── Reconnect with exponential backoff ───────────────────────────────────────
+var reconnectAttempts=0, reconnectTimer=null;
+function scheduleReconnect(){
+  if(reconnectTimer) return;
+  var delay=Math.min(30000,5000*Math.pow(2,reconnectAttempts));
+  reconnectTimer=setTimeout(async function(){
+    reconnectTimer=null;
+    if(!running) return;
+    addLog('Reconnecting (attempt '+(++reconnectAttempts)+')…','y');
+    try{
+      await autoDetectRegion();
+      var d=await withTimeout(mFetch('/account-information'),12000);
+      setOnline(true);
+      bal=parseFloat(d.balance)||bal;
+      reconnectAttempts=0;
+      addLog('Reconnected successfully.','g');
+    }catch(e){
+      addLog('Reconnect failed: '+e.message,'r');
+      scheduleReconnect(); // try again with longer delay
+    }
+  },delay);
+}
+</script>
+<script>
+// ════════════════════════════════════════════════════════════
+//  MAIN BOT LOOP — Trade execution engine
+// ════════════════════════════════════════════════════════════
+
+var lastTradeTime=0; // prevent duplicate trades within 60s
+
+async function runAnalysis(){
+  if(!running) return;
+
+  // Fetch price — retry up to 3 times before giving up
+  var priceOk=false;
+  for(var attempt=0;attempt<3&&!priceOk;attempt++){
+    priceOk=await fetchPrice();
+    if(!priceOk&&attempt<2){
+      await new Promise(function(r){setTimeout(r,3000);}); // wait 3s between retries
+    }
+  }
+  if(!priceOk){
+    addLog('Price unavailable after 3 attempts — will retry in 60s','r');
+    if(connected){setOnline(false);scheduleReconnect();}
+    return; // don't stop bot, just skip this cycle
+  }
+  if(!connected) setOnline(true);
+  reconnectAttempts=0;
+  // Keep localStorage flag fresh so auto-resume works
+  try{if(running)localStorage.setItem('ictbot_running','1');}catch(e){}
+
+  // Fetch account (non-blocking)
+  fetchAccount().catch(function(){});
+
+  // Fetch positions
+  await fetchPositions().catch(function(){});
+
+  // Refresh candles if needed
+  await fetchCandles().catch(function(){});
+  if(candles.length<5) return;
+
+  // Run ICT analysis
+  var analysis=runICTAnalysis();
+  if(!analysis) return;
+
+  // Update UI
+  updateChecklist(analysis);
+  updateZones(analysis);
+  renderKZ();
+
+  // Daily drawdown check
+  if(dayBal>0){
+    var ddPct=((dayBal-bal)/dayBal)*100;
+    if(ddPct>=C.dd){
+      addLog('Max daily drawdown ('+ddPct.toFixed(1)+'%) reached. Bot paused.','r');
+      showPopup('🛑 DAILY LIMIT HIT','Max daily drawdown of '+C.dd+'% reached.<br>Bot has been paused to protect your account.','var(--red)',15000);
+      stopBot(); return;
+    }
+  }
+
+  // Don't trade if max positions reached or too soon after last trade
+  if(openTrades.length >= parseInt(C.maxT||1)) return; // max open trades guard
+  // Cooldown: 30s aggressive, 2min normal, 5min sniper
+  var cooldownMs = C.mode==='aggressive'?30000 : C.mode==='sniper'?300000 : 120000;
+  if(Date.now()-lastTradeTime < cooldownMs) return; // 60s cooldown between trades
+
+  // Build signal
+  var sig=buildSignal(analysis);
+  showSignal(sig);
+
+  if(!sig) return;
+
+  // Execute trade
+  addLog('Signal: '+sig.dir.toUpperCase()+' | Entry:'+sig.entry+' SL:'+sig.sl+' TP:'+sig.tp+' Lot:'+sig.lot,'y');
+
+  try{
+    var tradeResp = await withTimeout(
+      mFetch('/trade','POST',{
+        symbol:     C.symbol,
+        actionType: sig.dir==='buy'?'ORDER_TYPE_BUY':'ORDER_TYPE_SELL',
+        volume:     sig.lot,
+        stopLoss:   sig.sl,
+        takeProfit: sig.tp,
+        comment:    'ICT_BOT'
+      }),
+      15000
+    );
+
+    // ── Verify MetaAPI actually accepted the trade ──────────────────────────
+    // MetaAPI returns {orderId:'...'} on success or {message:'...',error:'...'} on failure
+    var orderId = tradeResp && (tradeResp.orderId || tradeResp.positionId);
+    var tradeError = tradeResp && (tradeResp.error || tradeResp.message);
+
+    // Some MetaAPI errors come back as HTTP 200 with an error body — catch them
+    if (!orderId && tradeError) {
+      throw new Error('Broker rejected: ' + tradeError);
+    }
+
+    lastTradeTime = Date.now();
+    var orderRef = orderId ? ' #'+orderId : '';
+    addLog('✅ '+sig.mode+' '+sig.dir.toUpperCase()+orderRef+' | '+sig.reason+(sig.sb?' 🥇':'')+' Entry:'+sig.entry+' SL:'+sig.sl+' TP:'+sig.tp+' Lot:'+sig.lot+' Score:'+sig.score+'/10','g');
+
+    // Trade placed popup
+    showPopup(
+      (sig.dir==='buy'?'🟢':'🔴')+' TRADE PLACED — '+C.symbol,
+      'Mode: <b>'+sig.mode+'</b> ('+sig.tf+')<br>'
+      +'Direction: <b>'+sig.dir.toUpperCase()+'</b> | Lot: <b>'+sig.lot+'</b><br>'
+      +'Entry: <b>'+sig.entry+'</b><br>'
+      +'Stop Loss: <b style="color:var(--red)">'+sig.sl+'</b><br>'
+      +'Take Profit: <b style="color:var(--green)">'+sig.tp+'</b><br>'
+      +'RR: <b>1:'+sig.rr+'</b> | Score: <b>'+sig.score+'/10</b>',
+      sig.dir==='buy'?'var(--green)':'var(--red)',12000
+    );
+
+    // Native notification
+    sendNotif(
+      (sig.dir==='buy'?'🟢':'🔴')+' Trade Placed — '+C.symbol,
+      sig.dir.toUpperCase()+' '+sig.lot+' lot | Entry:'+sig.entry+' | SL:'+sig.sl+' | TP:'+sig.tp,
+      'trade-placed',
+      true  // WITH sound — trade was placed
+    );
+
+    await fetchPositions().catch(function(){});
+  }catch(e){
+    addLog('Trade failed: '+e.message,'r');
+    showPopup('❌ Trade Failed',e.message,'var(--red)',8000);
+  }
+}
+
+// ── Bot start / stop ──────────────────────────────────────────────────────────
+async function toggleBot(){
+  goTab('history');
+  addLog('━━━ START BOT ━━━','y');
+
+  if(!C.token||!C.accId){
+    addLog('❌ No credentials in Settings','r');
+    showPopup('⚙️ Setup Required','Enter MetaAPI Token and Account ID in Settings first.','var(--gold)',8000);
+    goTab('settings'); return;
+  }
+  addLog('Token: '+C.token.substring(0,12)+'… | AccId: '+C.accId.substring(0,8)+'…','y');
+
+  await requestNotifPermission();
+
+  // Connect to MetaAPI
+  addLog('Connecting to MetaAPI…','y');
+  try{
+    var region=(C.region&&C.region!=='auto')?C.region:'new-york';
+    detectedRegion=region;
+    addLog('Region: '+region,'y');
+
+    var acctUrl='https://mt-client-api-v1.'+region+'.agiliumtrade.ai/users/current/accounts/'+C.accId+'/account-information';
+    var acctR=await fetch('/.netlify/functions/metaapi',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url:acctUrl,token:C.token,method:'GET'})
+    });
+    var acctText=await acctR.text();
+    addLog('MetaAPI response ('+acctR.status+'): '+acctText.substring(0,100),'y');
+
+    if(!acctR.ok) throw new Error('HTTP '+acctR.status+': '+acctText.substring(0,150));
+    var acctD=JSON.parse(acctText);
+    if(acctD.error) throw new Error(acctD.error+': '+JSON.stringify(acctD).substring(0,100));
+    if(acctD.balance===undefined) throw new Error('Account not deployed — go to metaapi.cloud and click DEPLOY on your account');
+
+    bal=parseFloat(acctD.balance)||0;
+    eq=parseFloat(acctD.equity)||0;
+    if(!dayBal)dayBal=bal;
+    setOnline(true);
+    addLog('✅ Connected — Balance: '+cur(bal.toFixed(2)),'g');
+    var eb=G('elBal');if(eb)eb.textContent=cur(bal.toFixed(2));
+    var ee=G('elEq');if(ee)ee.textContent=cur(eq.toFixed(2));
+
+  }catch(connErr){
+    setOnline(false);
+    var em=connErr.message;
+    addLog('❌ Failed: '+em,'r');
+    var diag=em.includes('deployed')||em.includes('504')
+      ?'Account NOT deployed. Go to metaapi.cloud → your account → click DEPLOY and wait 2 min.'
+      :em.includes('401')||em.includes('403')
+      ?'Invalid Token or Account ID — double check in Settings.'
+      :em.includes('Failed to fetch')
+      ?'Network error — check internet and Netlify deployment.'
+      :'Check the History tab log for full details.';
+    addLog('Fix: '+diag,'r');
+    showPopup('❌ Connection Failed','<b>'+em+'</b><br><br>'+diag,'var(--red)',15000);
+    return;
+  }
+
+  // Start the bot
+  running=true;
+  var sb=G('startBtn'),sp=G('stopBtn');
+  if(sb)sb.style.display='none';
+  if(sp)sp.style.display='block';
+  var mp=getModeParams();
+  var pill=G('modePill');
+  if(pill){pill.textContent=mp.label;pill.style.display='inline-block';}
+  addLog('✅ Bot running — '+mp.label+' mode','g');
+  // Persist running state so we can auto-resume after background kill
+  try{localStorage.setItem('ictbot_running','1');}catch(e){}
+  showPopup('⚡ BOT STARTED','Mode: <b>'+mp.label+'</b><br>Balance: <b>'+cur(bal.toFixed(2))+'</b>','var(--gold)',5000);
+  requestWakeLock();startBgPing();
+  await runAnalysis();
+  if(loopTimer)clearInterval(loopTimer);
+  loopTimer=setInterval(runAnalysis,60000);
+  // Poll positions: 8s when trades are open (live P&L), 30s when idle
+  if(posTimer) clearInterval(posTimer);
+  posTimer = setInterval(function(){
+    if(!running){ clearInterval(posTimer); posTimer=null; return; }
+    var interval = openTrades.length > 0 ? 8000 : 30000;
+    // Adaptive: if trades open, refresh more often
+    if(openTrades.length > 0) fetchPositions().catch(function(){});
+  }, 8000);
+  // Also do immediate position fetch on start
+  fetchPositions().catch(function(){});
+  if(histTimer)clearInterval(histTimer);
+  histTimer=setInterval(function(){fetchHistory().catch(function(){});},300000);
+  fetchHistory().catch(function(){});
+  updateFloatPanel();
+}
+function stopBot(){
+  running=false;
+  if(loopTimer){clearInterval(loopTimer);loopTimer=null;}
+  if(histTimer){clearInterval(histTimer);histTimer=null;}
+  if(posTimer){clearInterval(posTimer);posTimer=null;}
+  if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null;}
+  G('startBtn').style.display='block';
+  G('stopBtn').style.display='none';
+  var pill=G('modePill');if(pill)pill.style.display='none';
+  releaseWakeLock();
+  stopBgPing();
+  showSignal(null);
+  addLog('Bot stopped.','y');
+  try{localStorage.removeItem('ictbot_running');}catch(e){}
+  showPopup('⏹ BOT STOPPED','All scanning paused. Your open positions remain active.','var(--gold)',4000);
+  updateFloatPanel();
+}
+
+// Close a single trade by its MetaAPI position ID
+async function closeSingleTrade(posId){
+  // Find the trade for display
+  var trade = openTrades.find(function(t){ return t.id == posId; });
+  if(!trade){ addLog('Trade #'+posId+' not found in open positions','r'); return; }
+
+  var isBuy = trade.type && trade.type.includes('BUY');
+  var profit = parseFloat(trade.profit)||0;
+  var pCol = profit>=0?'var(--green)':'var(--red)';
+  var sym = C.symbol;
+  var isBTC = sym==='BTCUSD'||sym==='ETHUSD';
+
+  // Confirmation popup with trade details
+  var confirmed = false;
+  await new Promise(function(resolve){
+    var ov = document.createElement('div');
+    ov.className = 'popup-overlay';
+    var box = document.createElement('div');
+    box.className = 'popup-box';
+    box.style.cssText = 'border:1px solid var(--border2)';
+    box.innerHTML =
+      '<div style="font-size:2rem;margin-bottom:10px">'+(isBuy?'🟢':'🔴')+'</div>'
+      +'<div class="popup-title" style="font-size:.95rem">Close This Trade?</div>'
+      +'<div class="popup-body">'
+        +'<b style="color:'+(isBuy?'var(--green)':'var(--red)')+'">'+(isBuy?'BUY':'SELL')+'</b> '+(trade.volume||0)+' lot<br>'
+        +'Symbol: <b>'+sym+'</b><br>'
+        +'Entry: <b>'+(trade.openPrice||0).toFixed(isBTC?0:2)+'</b><br>'
+        +'Current P&amp;L: <b style="color:'+pCol+'">'+(profit>=0?'+':'')+cur(profit.toFixed(2))+'</b><br><br>'
+        +'This closes at current market price.'
+      +'</div>'
+      +'<div style="display:flex;gap:8px">'
+        +'<button id="csCancelBtn" class="popup-btn" style="flex:1;background:var(--bg4);color:var(--text2);border:1px solid var(--border2)">Cancel</button>'
+        +'<button id="csConfirmBtn" class="popup-btn" style="flex:1;background:var(--red);color:#fff">Close Trade</button>'
+      +'</div>';
+    ov.appendChild(box);
+    document.body.appendChild(ov);
+    box.querySelector('#csCancelBtn').onclick  = function(){ ov.remove(); resolve(); };
+    box.querySelector('#csConfirmBtn').onclick = function(){ confirmed=true; ov.remove(); resolve(); };
+    ov.addEventListener('click', function(e){ if(e.target===ov){ ov.remove(); resolve(); } });
+  });
+
+  if(!confirmed) return;
+
+  addLog('Closing trade #'+posId+'…','y');
+  try{
+    var resp = await withTimeout(
+      mFetch('/trade','POST',{actionType:'POSITION_CLOSE_ID', positionId:String(posId)}),
+      12000
+    );
+    // Check MetaAPI confirmed closure
+    if(resp && resp.error){ throw new Error(resp.error); }
+    addLog('✅ Trade #'+posId+' closed | P&L: '+(profit>=0?'+':'')+cur(profit.toFixed(2)), profit>=0?'g':'r');
+    showPopup(
+      profit>=0?'💰 Trade Closed — Profit':'📉 Trade Closed',
+      (isBuy?'BUY':'SELL')+' '+trade.volume+' lot @ '+(trade.openPrice||0).toFixed(isBTC?0:2)+'<br>'
+      +'P&amp;L: <b style="color:'+pCol+'">'+(profit>=0?'+':'')+cur(profit.toFixed(2))+'</b>',
+      profit>=0?'var(--green)':'var(--red)', 6000
+    );
+    // Wait briefly then refresh
+    await new Promise(function(r){ setTimeout(r, 800); });
+    await fetchPositions().catch(function(){});
+  }catch(e){
+    addLog('Close failed: '+e.message,'r');
+    showPopup('❌ Close Failed', e.message, 'var(--red)', 6000);
+  }
+}
+
+// Close ALL open trades with confirmation
+async function closeAll(){
+  if(!openTrades.length){
+    showPopup('ℹ️ No Trades','No open positions to close.','var(--gold)',4000);
+    return;
+  }
+  var totalPnl = openTrades.reduce(function(s,t){ return s+(parseFloat(t.profit)||0); }, 0);
+  var pCol = totalPnl>=0?'var(--green)':'var(--red)';
+
+  var confirmed = false;
+  await new Promise(function(resolve){
+    var ov = document.createElement('div');
+    ov.className = 'popup-overlay';
+    var box = document.createElement('div');
+    box.className = 'popup-box';
+    box.style.cssText = 'border:1px solid var(--red)';
+    box.innerHTML =
+      '<div style="font-size:2rem;margin-bottom:10px">⚠️</div>'
+      +'<div class="popup-title" style="color:var(--red)">Close ALL '+openTrades.length+' Trade'+(openTrades.length>1?'s':'')+'?</div>'
+      +'<div class="popup-body">'
+        +'All <b>'+openTrades.length+'</b> open position'+(openTrades.length>1?'s':'')+' will be closed at market price.<br><br>'
+        +'Total floating P&amp;L: <b style="color:'+pCol+'">'+(totalPnl>=0?'+':'')+cur(totalPnl.toFixed(2))+'</b>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px">'
+        +'<button id="caCancelBtn" class="popup-btn" style="flex:1;background:var(--bg4);color:var(--text2);border:1px solid var(--border2)">Cancel</button>'
+        +'<button id="caConfirmBtn" class="popup-btn" style="flex:1;background:var(--red);color:#fff">Close All</button>'
+      +'</div>';
+    ov.appendChild(box);
+    document.body.appendChild(ov);
+    box.querySelector('#caCancelBtn').onclick  = function(){ ov.remove(); resolve(); };
+    box.querySelector('#caConfirmBtn').onclick = function(){ confirmed=true; ov.remove(); resolve(); };
+    ov.addEventListener('click', function(e){ if(e.target===ov){ ov.remove(); resolve(); } });
+  });
+
+  if(!confirmed) return;
+
+  var closed=0, failed=0;
+  for(var i=0; i<openTrades.length; i++){
+    try{
+      var resp2 = await withTimeout(
+        mFetch('/trade','POST',{actionType:'POSITION_CLOSE_ID', positionId:String(openTrades[i].id)}),
+        12000
+      );
+      if(resp2&&resp2.error) throw new Error(resp2.error);
+      addLog('Closed #'+openTrades[i].id,'y');
+      closed++;
+    }catch(e){
+      addLog('Close error #'+openTrades[i].id+': '+e.message,'r');
+      failed++;
+    }
+  }
+  addLog('Close all: '+closed+' closed'+(failed?' | '+failed+' failed':''), closed>0?'g':'r');
+  await new Promise(function(r){ setTimeout(r, 1000); });
+  await fetchPositions().catch(function(){});
+}
+
+// ── Test Trade Function ──────────────────────────────────────────────────────
+async function runTestTrade(){
+  goTab('history');
+  addLog('━━━ TEST TRADE ━━━','b');
+  var btn=G('testTradeBtn'),res=G('testTradeResult');
+  if(btn){btn.textContent='⏳ Testing…';btn.disabled=true;}
+  if(res){res.style.display='block';res.innerHTML='';}
+
+  function log(msg,col){
+    addLog(msg,col||'y');
+    if(res)res.innerHTML+='<div style="font-size:.72rem;padding:2px 0;color:'+(col==='g'?'var(--green)':col==='r'?'var(--red)':col==='b'?'var(--blue)':'var(--gold)')+'">'+msg+'</div>';
+  }
+
+  try{
+    if(!C.token||!C.accId) throw new Error('Save your Token and Account ID in Settings first');
+
+    // Step 1: region
+    var region=(C.region&&C.region!=='auto')?C.region:'new-york';
+    if(C.region==='auto'){
+      log('Auto-detecting region…');
+      for(var ri=0;ri<REGIONS.length;ri++){
+        try{
+          var tu='https://mt-client-api-v1.'+REGIONS[ri]+'.agiliumtrade.ai/users/current/accounts/'+C.accId+'/account-information';
+          var rr=await fetch('/.netlify/functions/metaapi',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:tu,token:C.token,method:'GET'})});
+          var rd=await rr.json();
+          if(rd&&rd.balance!==undefined){region=REGIONS[ri];break;}
+        }catch(e){}
+      }
+    }
+    detectedRegion=region;
+    log('Region: '+region,'g');
+
+    // Step 2: account info
+    var aiUrl='https://mt-client-api-v1.'+region+'.agiliumtrade.ai/users/current/accounts/'+C.accId+'/account-information';
+    var aiR=await fetch('/.netlify/functions/metaapi',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:aiUrl,token:C.token,method:'GET'})});
+    var aiText=await aiR.text();
+    log('Account response ('+aiR.status+'): '+aiText.substring(0,80));
+    if(!aiR.ok) throw new Error('HTTP '+aiR.status+': '+aiText.substring(0,100));
+    var aiD=JSON.parse(aiText);
+    if(aiD.error) throw new Error(aiD.error);
+    if(aiD.balance===undefined) throw new Error('Account not deployed at metaapi.cloud');
+    bal=parseFloat(aiD.balance)||0;
+    log('Balance: '+cur(bal.toFixed(2)),'g');
+
+    // Step 3: price
+    var pR=await fetch('/.netlify/functions/market?url='+encodeURIComponent('https://api.gold-api.com/price/XAU'));
+    var pD=await pR.json();
+    var price=parseFloat(pD.price)||0;
+    if(!price) throw new Error('Price fetch failed');
+    log('Price: '+price.toFixed(2),'g');
+
+    // Step 4: place trade
+    var dir=G('testDir')?G('testDir').value:'buy';
+    var sl=parseFloat((dir==='buy'?price-1.0:price+1.0).toFixed(2));
+    var tp=parseFloat((dir==='buy'?price+1.0:price-1.0).toFixed(2));
+    log('Placing '+dir.toUpperCase()+' 0.01 lot @ '+price.toFixed(2));
+
+    var tUrl='https://mt-client-api-v1.'+region+'.agiliumtrade.ai/users/current/accounts/'+C.accId+'/trade';
+    var tBody={symbol:C.symbol,actionType:dir==='buy'?'ORDER_TYPE_BUY':'ORDER_TYPE_SELL',volume:0.01,stopLoss:sl,takeProfit:tp,comment:'ICT_TEST'};
+    var tR=await fetch('/.netlify/functions/metaapi',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:tUrl,token:C.token,method:'POST',tradeBody:tBody})});
+    var tText=await tR.text();
+    log('Trade response ('+tR.status+'): '+tText.substring(0,120));
+
+    var tD;
+    try{tD=JSON.parse(tText);}catch(e){throw new Error('Bad trade response: '+tText.substring(0,100));}
+    if(tD.error) throw new Error(tD.error+': '+JSON.stringify(tD));
+    if(!tR.ok) throw new Error('HTTP '+tR.status);
+
+    log('✅ TRADE PLACED! '+JSON.stringify(tD).substring(0,80),'g');
+    showPopup('✅ TRADE PLACED!',dir.toUpperCase()+' 0.01 lot '+C.symbol+'<br>SL:'+sl+' TP:'+tp,'var(--green)',15000);
+    fetchPositions().catch(function(){});
+
+  }catch(e){
+    log('❌ '+e.message,'r');
+    var d=e.message.includes('deployed')||e.message.includes('504')
+      ?'Go to metaapi.cloud → click DEPLOY on your account'
+      :e.message.includes('401')||e.message.includes('403')
+      ?'Wrong Token or Account ID in Settings'
+      :e.message.includes('symbol')||e.message.includes('not found')
+      ?'Wrong symbol — try XAUUSD or XAUUSDm in Settings'
+      :'See full log in History tab';
+    log('Fix: '+d,'r');
+    showPopup('❌ Test Failed',e.message+'<br><br>'+d,'var(--red)',12000);
+  }finally{
+    if(btn){btn.textContent='🧪 Place Test Trade (0.01 lot)';btn.disabled=false;}
+  }
+}
+
+window.addEventListener('load',function(){
+  loadCfg();
+  renderKZ();
+  // render education after all scripts loaded
+  setTimeout(function(){ renderEdu(); }, 100);
+  kzTimer=setInterval(renderKZ,30000);
+  updateModeDesc();
+  addLog('ICT Gold Bot Pro ready. Go to Settings to connect.','y');
+
+  // Auto-resume: if bot was running before page was backgrounded/killed
+  setTimeout(async function(){
+    var wasRunning = false;
+    try{ wasRunning = localStorage.getItem('ictbot_running')==='1'; }catch(e){}
+    if(wasRunning && C.token && C.accId){
+      addLog('Resuming bot after background reload…','y');
+      // Small delay to let startup health check complete first
+      await new Promise(function(r){setTimeout(r,3000);});
+      if(!running){ // only resume if not already started
+        toggleBot();
+      }
+    }
+  }, 2000);
+
+  // Startup health check — test all connections silently
+  setTimeout(async function(){
+    addLog('Running startup checks…','y');
+
+    // Test 1: Price feed (no credentials needed)
+    try{
+      var r = await withTimeout(
+        fetch('/.netlify/functions/market?url='+encodeURIComponent('https://api.gold-api.com/price/XAU')),
+        10000
+      );
+      var d = await r.json();
+      var p = parseFloat(d.price)||0;
+      if(p>0){
+        addLog('✅ Price feed OK — GOLD: '+p.toFixed(2),'g');
+        // Update ticker immediately
+        bid = parseFloat((p-0.15).toFixed(2));
+        ask = parseFloat((p+0.15).toFixed(2));
+        var pm=G('priceMain'); if(pm) pm.textContent=p.toFixed(2);
+        var ps=G('priceSub'); if(ps) ps.innerHTML='Bid:'+bid.toFixed(2)+' / Ask:'+ask.toFixed(2)+'<br>Spread:0.30';
+      } else {
+        addLog('⚠️ Price feed returned empty — check Netlify deployment','r');
+      }
+    }catch(e){
+      addLog('⚠️ Price feed error: '+e.message,'r');
+    }
+
+    // Test 2: MetaAPI (only if credentials saved)
+    if(C.token&&C.accId){
+      try{
+        await autoDetectRegion();
+        var info = await withTimeout(mFetch('/account-information'),15000);
+        bal = parseFloat(info.balance)||0;
+        addLog('✅ MetaAPI OK — Balance: '+cur(bal.toFixed(2))+' | Region: '+detectedRegion,'g');
+        setOnline(true);
+        var eb=G('elBal'); if(eb) eb.textContent=cur(bal.toFixed(2));
+        var ee=G('elEq');  if(ee) ee.textContent=cur((info.equity||0).toFixed(2));
+        if(!dayBal) dayBal=bal;
+      }catch(e){
+        addLog('⚠️ MetaAPI error: '+e.message,'r');
+        addLog('Tip: Go to Settings → Test Connection to diagnose','b');
+        setOnline(false);
+      }
+    } else {
+      addLog('ℹ️ No credentials saved — go to Settings to connect','b');
+    }
+  }, 1500);
+
+  // Keep price fresh every 30s regardless of bot state
+  setInterval(function(){
+    fetchPrice().catch(function(){});
+  }, 30000);
+  // Float widget removed
+});
+</script>
+<script>
+// ════════════════════════════════════════════════════════════
+//  AI ANALYST — Claude-powered market commentary
+// ════════════════════════════════════════════════════════════
+
+var aiHistory=[];
+
+// ════════════════════════════════════════════════════════════
+//  BUILT-IN ICT AI ANALYST — No API key, completely free
+//  Knowledge base covers all ICT concepts + Gold market specifics
+//  Context-aware: uses live price, analysis, bot state
+// ════════════════════════════════════════════════════════════
+
+var aiHistory = [];
+
+function sendAI(){
+  var input=G('aiText'); if(!input) return;
+  var msg=input.value.trim(); if(!msg) return;
+  input.value='';
+  var ta=G('aiText'); if(ta){ta.style.height='auto';}
+  quickAI(msg);
+}
+
+function quickAI(msg){
+  try{
+  var msgs=G('aiMessages'); if(!msgs) return;
+  aiHistory.push({role:'user',content:msg});
+
+  var userDiv=document.createElement('div');
+  userDiv.className='ai-msg user'; userDiv.textContent=msg;
+  msgs.appendChild(userDiv);
+
+  var typing=document.createElement('div');
+  typing.className='ai-msg bot typing'; typing.innerHTML='<span style="color:var(--text3)">Analysing…</span>';
+  msgs.appendChild(typing);
+  msgs.scrollTop=msgs.scrollHeight;
+
+  // Simulate natural response delay
+  setTimeout(function(){
+    var reply = builtInICTResponse(msg);
+    typing.className='ai-msg bot';
+    typing.innerHTML=reply;
+    aiHistory.push({role:'assistant',content:reply.replace(/<[^>]+>/g,' ')});
+    msgs.scrollTop=msgs.scrollHeight;
+  }, 600 + Math.random()*800);
+  }catch(e){ addLog('AI error: '+e.message,'r'); }
+}
+
+function builtInICTResponse(msg){
+  var q = msg.toLowerCase();
+  var analysis = candles.length>=5 ? runICTAnalysis() : null;
+  var price = bid>0 ? ((bid+ask)/2).toFixed(2) : null;
+  var mp = getModeParams();
+
+  // ── Live market context builder ───────────────────────────────────────────
+  function liveCtx(){
+    if(!analysis||!price) return '<br><br><span style="color:var(--text3)">💡 Start the bot to get live market analysis.</span>';
+    var bias_color = analysis.bias==='bullish'?'var(--green)':'var(--red)';
+    var mss_color  = analysis.mss.dir==='bullish'?'var(--green)':analysis.mss.dir==='bearish'?'var(--red)':'var(--gold)';
+    var pd_color   = analysis.pd==='discount'?'var(--green)':'var(--red)';
+    return '<br><br>📊 <b>Live:</b> '
+      +'Price <b style="color:var(--gold)">'+price+'</b> | '
+      +'Bias <b style="color:'+bias_color+'">'+analysis.bias.toUpperCase()+'</b> | '
+      +'MSS <b style="color:'+mss_color+'">'+analysis.mss.dir+' ('+analysis.mss.type+')</b> | '
+      +'Zone <b style="color:'+pd_color+'">'+analysis.pd.toUpperCase()+'</b> | '
+      +'Score <b style="color:var(--gold)">'+analysis.score+'/10</b>'      +(analysis.sbOn?' | <b style="color:var(--gold)">🥇 '+analysis.activeSB.name+' ACTIVE</b>':'')      +(analysis.liq.swept?' | <b style="color:var(--green)">✅ Liq swept</b>':' | <b style="color:var(--red)">❌ No liq sweep</b>')      +(analysis.po3&&analysis.po3.judas?' | <b style="color:var(--red)">⚡ JUDAS SWING</b>':'');
+  }
+
+  // ── Keyword response engine ────────────────────────────────────────────────
+
+  // Silver Bullet — CallistoFX primary setup
+  if(q.match(/silver bullet|sb|callisto|callistofx/)){
+    var sbStatus=SILVER_BULLET_WINDOWS.map(function(w){
+      var h=new Date().getUTCHours()+new Date().getUTCMinutes()/60;
+      var on=h>=w.start&&h<w.end;
+      return (on?'🟢':'⚪')+' <b>'+w.name+'</b>: UTC '+w.start+':00–'+w.end+':00'+(on?' <b style="color:var(--gold)">(ACTIVE NOW)</b>':'');
+    }).join('<br>');
+    var liveInfo='';
+    if(analysis){
+      liveInfo='<br><br>📊 <b>Current status:</b><br>'
+        +'Silver Bullet: <b style="color:'+(analysis.sbOn?'var(--green)':'var(--red)')+'">'+(analysis.sbOn?analysis.activeSB.name+' ACTIVE':'Not in window')+'</b><br>'
+        +'Liquidity swept: <b>'+(analysis.liq.swept?'✅ YES — '+analysis.liq.side:'❌ NOT YET — wait for sweep')+'</b><br>'
+        +'FVG present: <b>'+(analysis.fvgs.length?analysis.fvgs.length+' detected':'None')+'</b><br>'
+        +(analysis.po3&&analysis.po3.judas?'<br>⚡ <b style="color:var(--red)">JUDAS SWING DETECTED!</b> '+analysis.po3.judas.label:'');
+    }
+    return '🥇 <b style="color:var(--gold)">CallistoFX Silver Bullet Strategy</b><br><br>'      +'CallistoFX uses the ICT Silver Bullet as his primary setup. His 5-step model:<br><br>'      +'<b>Step 1 — Kill Zone:</b> Only trade inside a Silver Bullet window<br>'      +'<b>Step 2 — Liquidity Sweep:</b> Wait for price to raid buyside/sellside liquidity (stop hunt)<br>'      +'<b>Step 3 — MSS Confirmation:</b> After the sweep, price must shift structure on a lower timeframe<br>'      +'<b>Step 4 — FVG Entry:</b> Enter on the retest of the displacement FVG that formed during the sweep<br>'      +'<b>Step 5 — Risk Management:</b> SL below FVG low, TP at next draw on liquidity (2:1 minimum)<br><br>'      +'<b>Silver Bullet Windows (UTC):</b><br>'      +sbStatus      +'<br><br><b>CallistoFX Rule #1:</b> No liquidity raid = No trade. Period. Never enter without a sweep.'      +liveInfo;
+  }
+
+  // Power of 3 / AMD / Judas Swing
+  if(q.match(/power of 3|po3|amd|accumulation|manipulation|distribution|judas/)){
+    var po3Info='';
+    if(analysis&&analysis.po3){
+      po3Info='<br><br>📊 <b>Current AMD Phase:</b> <b style="color:var(--gold)">'+analysis.po3.phase.toUpperCase()+'</b>';
+      if(analysis.po3.judas) po3Info+='<br>⚡ <b style="color:var(--red)">JUDAS SWING: '+analysis.po3.judas.label+'</b>';
+      if(analysis.po3.asiaRange&&analysis.po3.asiaRange.high>0)
+        po3Info+='<br>Asia Range: '+analysis.po3.asiaRange.low.toFixed(2)+' – '+analysis.po3.asiaRange.high.toFixed(2);
+    }
+    return '⚡ <b style="color:var(--gold)">Power of 3 — AMD Model</b><br><br>'      +'Every trading day follows a 3-phase algorithm:<br><br>'      +'🌙 <b>Accumulation (Asia session):</b> Smart money builds positions quietly in a range. Low volatility, choppy. DO NOT TRADE.<br><br>'      +'⚡ <b>Manipulation (London/NY Open):</b> The JUDAS SWING — price fakes out in the WRONG direction to sweep liquidity and trap retail. This is the setup trigger.<br><br>'      +'🚀 <b>Distribution (NY session):</b> The TRUE move — price reverses from the manipulation sweep and runs to the real target. This is where you profit.<br><br>'      +'<b>CallistoFX Application:</b><br>'      +'1. Mark the Asia session range (high and low)<br>'      +'2. At London open — watch for a false break ABOVE the Asia high (bearish day) or BELOW Asia low (bullish day)<br>'      +'3. When the sweep happens with a liquidity grab → enter in the OPPOSITE direction'      +po3Info;
+  }
+
+  // Breaker blocks
+  if(q.match(/breaker|breaker block|failed ob|flip/)){
+    var brkInfo='';
+    if(analysis&&analysis.breakers&&analysis.breakers.length){
+      brkInfo='<br><br>📍 <b>'+analysis.breakers.length+' Breaker Block(s) detected:</b><br>'
+        +analysis.breakers.map(function(b){return (b.type==='bull'?'🟢':'🔴')+' '+b.type+' Breaker: '+b.low.toFixed(2)+'–'+b.high.toFixed(2);}).join('<br>');
+    }
+    return '🔲 <b style="color:var(--gold)">Breaker Blocks</b><br><br>'      +'A Breaker Block is a <b>failed Order Block that flips polarity</b>.<br><br>'      +'<b>How it forms:</b><br>'      +'1. A bullish OB (support) gets broken to the downside → becomes a <b>bearish breaker</b> (now resistance)<br>'      +'2. A bearish OB (resistance) gets broken to the upside → becomes a <b>bullish breaker</b> (now support)<br><br>'      +'<b>How to trade:</b><br>'      +'• Price returns to the breaker zone = high-probability reversal entry<br>'      +'• More powerful than regular OBs because the stop hunts are already done<br>'      +'• Best used in confluence with FVG and kill zone'      +brkInfo;
+  }
+
+  // NDOG / NWOG
+  if(q.match(/ndog|nwog|opening gap|new day opening|new week opening/)){
+    var gapInfo='';
+    if(analysis&&analysis.gaps&&analysis.gaps.ndog)
+      gapInfo='<br><br>📍 <b>Current NDOG:</b> '+analysis.gaps.ndog.label+': '+analysis.gaps.ndog.bot.toFixed(2)+' – '+analysis.gaps.ndog.top.toFixed(2)+' | CE: '+analysis.gaps.ndog.ce.toFixed(2);
+    return '📅 <b style="color:var(--gold)">NDOG / NWOG — Opening Gaps</b><br><br>'      +'<b>NDOG (New Day Opening Gap):</b> The gap between 5PM NY close and 6PM NY open. Forms daily.<br>'      +'<b>NWOG (New Week Opening Gap):</b> The gap between Friday 5PM close and Monday 6PM open.<br><br>'      +'<b>Key Rules:</b><br>'      +'• Price is magnetically attracted to fill these gaps<br>'      +'• The CE (Consequent Encroachment = 50% of gap) is the strongest reaction level<br>'      +'• Mark at least 5 NDOGs on the chart for reference<br>'      +'• Best traded during the NY AM session (10AM–11AM ET)<br><br>'      +'<b>Entry method:</b> Wait for price to enter the NDOG/NWOG zone, look for an FVG or MSS inside the gap, then enter on the retest'      +gapInfo;
+  }
+
+  // Market structure
+  if(q.match(/market structure|structure|bos|choch|trend/)){
+    if(analysis&&price){
+      var dir=analysis.mss.dir, type=analysis.mss.type, bias=analysis.bias;
+      var col=dir==='bullish'?'var(--green)':'var(--red)';
+      return '📐 <b style="color:var(--gold)">Current Market Structure</b><br><br>'
+        +'The structure for <b>'+C.symbol+'</b> is showing a <b style="color:'+col+'">'+dir.toUpperCase()+' '+type+'</b> at the current price of <b>'+price+'</b>.<br><br>'
+        +'HTF Bias is <b style="color:'+col+'">'+bias+'</b>, meaning the higher timeframe wants to move '+(bias==='bullish'?'higher ↑':'lower ↓')+'.<br><br>'
+        +(type==='BOS'?'A <b>BOS (Break of Structure)</b> means the trend is continuing — look for pullbacks as entries in the direction of the move.'
+          :type==='CHoCH'?'A <b>CHoCH (Change of Character)</b> is the first sign of a reversal — wait for confirmation before trading the new direction.'
+          :'Structure is <b>neutral</b> — no clear break yet. Wait for a clean BOS or CHoCH before taking a trade.')
+        +'<br><br>Zone: Price is in <b>'+(analysis.pd==='discount'?'DISCOUNT 🟢 (buy zone)':'PREMIUM 🔴 (sell zone)')+'</b>.';
+    }
+    return '📐 <b>Market Structure</b> is the foundation of ICT trading.<br><br>'
+      +'<b>Bullish structure:</b> Higher highs + higher lows → trade longs on pullbacks<br>'
+      +'<b>Bearish structure:</b> Lower lows + lower highs → trade shorts on rallies<br><br>'
+      +'<b>BOS</b> (Break of Structure) = trend continuation signal.<br>'
+      +'<b>CHoCH</b> (Change of Character) = first reversal warning.<br><br>'
+      +'Start the bot and I will analyse the live structure for you!';
+  }
+
+  // FVG
+  if(q.match(/fvg|fair value gap|imbalance|gap/)){
+    var fvgInfo='';
+    if(analysis&&analysis.fvgs.length){
+      var f=analysis.fvgs[analysis.fvgs.length-1];
+      fvgInfo='<br><br>📍 <b>Live FVG detected:</b> <b style="color:'+(f.type==='bull'?'var(--green)':'var(--red)')+'">'+f.type.toUpperCase()+'</b> FVG at <b>'+f.bot.toFixed(2)+'–'+f.top.toFixed(2)+'</b>. '+(f.type==='bull'?'This is a potential buy zone if price returns here.':'This is a potential sell zone if price returns here.');
+    }
+    return '📊 <b style="color:var(--gold)">Fair Value Gaps (FVG)</b><br><br>'
+      +'An FVG is a 3-candle imbalance where price moved so fast it left a gap. Institutions use these zones as re-entry points.<br><br>'
+      +'<b>Bullish FVG:</b> Candle 1 high < Candle 3 low → price pulled back to fill = buy zone<br>'
+      +'<b>Bearish FVG:</b> Candle 1 low > Candle 3 high → price rallied into gap = sell zone<br><br>'
+      +'<b>Best FVGs to trade:</b><br>'
+      +'✅ Aligned with HTF bias<br>'
+      +'✅ Created during kill zones (London/NY)<br>'
+      +'✅ Combined with Order Block at same level<br>'
+      +'✅ Price in discount (for bullish FVG)<br>'
+      +'❌ Counter-trend FVGs (lower probability)'
+      +fvgInfo;
+  }
+
+  // Order blocks
+  if(q.match(/order block|ob|institutional|smart money footprint/)){
+    var obInfo='';
+    if(analysis&&analysis.obs.length){
+      var o=analysis.obs[0];
+      obInfo='<br><br>📍 <b>Live OB detected:</b> <b style="color:'+(o.type==='bull'?'var(--green)':'var(--red)')+'">'+o.type.toUpperCase()+'</b> Order Block at <b>'+o.low.toFixed(2)+'–'+o.high.toFixed(2)+'</b>.';
+    }
+    return '🧱 <b style="color:var(--gold)">Order Blocks (OB)</b><br><br>'
+      +'The last opposing candle before a strong move — this is where institutions filled their orders.<br><br>'
+      +'<b>Bullish OB:</b> Last bearish candle before bullish expansion → support on return<br>'
+      +'<b>Bearish OB:</b> Last bullish candle before bearish expansion → resistance on return<br><br>'
+      +'<b>Entry technique:</b><br>'
+      +'1. Wait for price to return to the OB zone<br>'
+      +'2. Look for a confirmation candle (reaction)<br>'
+      +'3. Place stop BELOW OB low (buys) or ABOVE OB high (sells)<br>'
+      +'4. Target the next swing high/low or FVG'
+      +obInfo;
+  }
+
+  // Kill zones / sessions
+  if(q.match(/kill zone|session|london|new york|ny|asian|time|when to trade/)){
+    var kzStatus='';
+    KZ.forEach(function(kz){
+      var on=kzActive(kz);
+      kzStatus+='<br>'+(on?'🟢':'⚪')+' <b>'+kz.name+'</b>: '+kzSAST(kz.us)+'–'+kzSAST(kz.ue)+' SAST '+(on?'<b style="color:var(--green)">(ACTIVE NOW)</b>':'');
+    });
+    return '🕐 <b style="color:var(--gold)">Kill Zones — Best Trading Times</b><br><br>'
+      +'Kill zones are specific windows when institutional order flow is highest for GOLD:<br>'
+      +kzStatus
+      +'<br><br><b>Tips:</b><br>'
+      +'✅ London Open (09:00–12:00 SAST) is highest probability for Gold<br>'
+      +'✅ NY Open (14:00–17:00 SAST) is second highest<br>'
+      +'⚠️ Asian session (23:00–02:00 SAST) is low volatility — avoid trading<br>'
+      +'⚠️ Friday after 20:00 SAST — reduce size, liquidity dries up';
+  }
+
+  // OTE / Fibonacci
+  if(q.match(/ote|optimal trade|fibonacci|fib|retracement|61|79/)){
+    var oteInfo='';
+    if(analysis) oteInfo='<br><br>📍 <b>Current OTE status:</b> <b style="color:'+(analysis.ote?'var(--green)':'var(--gold)')+'">'+( analysis.ote?'✅ Price IS in OTE zone right now!':'Price is outside OTE zone')+'</b>';
+    return '🎯 <b style="color:var(--gold)">OTE — Optimal Trade Entry</b><br><br>'
+      +'The OTE is the ideal entry zone: the <b>61.8% to 79%</b> Fibonacci retracement of the last swing move.<br><br>'
+      +'<b>Why 61.8–79%?</b><br>'
+      +'Retail traders use 50% — institutions use 61.8–79% to get better prices than retail, creating the trap that fuels the next move.<br><br>'
+      +'<b>How to use:</b><br>'
+      +'1. Identify a clean swing (high to low or low to high)<br>'
+      +'2. Calculate 61.8% and 79% retracement levels<br>'
+      +'3. Wait for price to enter this zone<br>'
+      +'4. Look for FVG or OB within the zone for entry<br>'
+      +'5. Stop below the 100% level (swing start)'
+      +oteInfo;
+  }
+
+  // Premium / Discount
+  if(q.match(/premium|discount|zone|50%|equilibrium/)){
+    var pdInfo='';
+    if(analysis) pdInfo='<br><br>📍 <b>Current zone:</b> <b style="color:'+(analysis.pd==='discount'?'var(--green)':'var(--red)')+'">'+analysis.pd.toUpperCase()+'</b> — '+(analysis.pd==='discount'?'Potential buy area (price is cheap)':'Potential sell area (price is expensive)');
+    return '⚖️ <b style="color:var(--gold)">Premium & Discount Zones</b><br><br>'
+      +'The most powerful filter in ICT: <b>never buy expensive, never sell cheap.</b><br><br>'
+      +'<b>How it works:</b><br>'
+      +'Take any swing high and swing low → the midpoint (50%) is equilibrium<br>'
+      +'<b style="color:var(--green)">Below 50% = DISCOUNT</b> → look for buy setups only<br>'
+      +'<b style="color:var(--red)">Above 50% = PREMIUM</b> → look for sell setups only<br><br>'
+      +'<b>Rule:</b> If bias is bullish but price is in premium → WAIT. If bias is bearish but price is in discount → WAIT. Patience is the edge.'
+      +pdInfo;
+  }
+
+  // Liquidity
+  if(q.match(/liquidity|sweep|stop hunt|bsl|ssl|equal high|equal low/)){
+    var liqInfo='';
+    if(analysis) liqInfo='<br><br>📍 <b>Recent sweep:</b> '+(analysis.liq.swept?'<b style="color:var(--green)">✅ '+analysis.liq.side+' swept at '+analysis.liq.level+'</b> — potential reversal signal!':'<b style="color:var(--text3)">No recent sweep detected</b>');
+    return '💧 <b style="color:var(--gold)">Liquidity & Stop Hunts</b><br><br>'
+      +'Liquidity = clusters of stop losses. Smart money targets these BEFORE making the real move.<br><br>'
+      +'<b>Types:</b><br>'
+      +'<b>SSL (Sell-Side Liquidity):</b> Stops below swing lows → price dips below then reverses UP<br>'
+      +'<b>BSL (Buy-Side Liquidity):</b> Stops above swing highs → price spikes above then reverses DOWN<br><br>'
+      +'<b>The trade:</b><br>'
+      +'1. Identify equal highs/lows (obvious stop clusters)<br>'
+      +'2. Wait for price to wick through the level<br>'
+      +'3. Watch for close BACK through the level (confirmation of sweep)<br>'
+      +'4. Enter in the reversal direction with OB/FVG confirmation'
+      +liqInfo;
+  }
+
+  // Current signal analysis
+  if(q.match(/signal|setup|trade|analyse|analyze|should i|entry|take this/)){
+    if(analysis&&price){
+      var sig=buildSignal(analysis);
+      var col=sig?(sig.dir==='buy'?'var(--green)':'var(--red)'):'var(--text3)';
+      return '🔍 <b style="color:var(--gold)">Current Setup Analysis</b><br><br>'
+        +'Price: <b style="color:var(--gold)">'+price+'</b> | Mode: <b>'+mp.label+'</b><br><br>'
+        +'<b>Confluence Score: '+analysis.score+'/7</b><br>'
+        +(analysis.kzOn?'✅':'❌')+' Kill Zone<br>'
+        +(analysis.fvgs.length?'✅':'❌')+' Fair Value Gap<br>'
+        +(analysis.obs.length?'✅':'❌')+' Order Block<br>'
+        +(analysis.mss.dir!=='neutral'?'✅':'❌')+' Market Structure Shift ('+analysis.mss.type+')<br>'
+        +(analysis.liq.swept?'✅':'❌')+' Liquidity Swept<br>'
+        +(analysis.bias!=='neutral'?'✅':'❌')+' HTF Bias ('+analysis.bias+')<br>'
+        +(analysis.ote?'✅':'❌')+' OTE Zone<br><br>'
+        +(sig?'<b style="color:'+col+'">⚡ SIGNAL: '+sig.dir.toUpperCase()+' @ '+sig.entry+' | SL: '+sig.sl+' | TP: '+sig.tp+'</b><br>RR: 1:'+sig.rr+' | Lot: '+sig.lot
+          :'<b style="color:var(--text3)">No signal.</b> Score '+analysis.score+'/10 (need '+mp.minScore+') | MSS: '+analysis.mss.dir+' | Bias: '+analysis.bias+(analysis.liq.swept?' | ✅ Liq swept':' | ❌ No liq sweep')+(analysis.sbOn?' | 🥇 SB active':'')+'. '+'CallistoFX Rule #1: wait for liquidity sweep before entry.');
+    }
+    return '🔍 Start the bot to get a live signal analysis. The bot will scan FVGs, Order Blocks, Market Structure, and Liquidity to find high-probability ICT setups.';
+  }
+
+  // Power of 3 / AMD
+  if(q.match(/power of 3|amd|accumulation|manipulation|distribution|judas/)){
+    return '⚡ <b style="color:var(--gold)">Power of 3 — AMD Model</b><br><br>'
+      +'The 3 phases every institutional move goes through:<br><br>'
+      +'<b style="color:var(--blue)">1. ACCUMULATION</b> (Asian session)<br>'
+      +'Consolidation range. Smart money quietly builds positions. No clear direction. Range is typically 3-8 USD for Gold.<br><br>'
+      +'<b style="color:var(--red)">2. MANIPULATION</b> (London open)<br>'
+      +'False move to hunt stop losses. London will BREAK the Asian high or low to trap retail traders in the wrong direction.<br><br>'
+      +'<b style="color:var(--green)">3. DISTRIBUTION</b> (NY session)<br>'
+      +'The real move. Smart money distributes positions in the TRUE direction. This is where the big pip moves happen.<br><br>'
+      +'<b>Trading tip:</b> When London breaks the Asian range and you see a CHoCH → that is your entry for the Distribution phase. Best trade of the day.';
+  }
+
+  // Gold specific
+  if(q.match(/gold|xauusd|xau|precious metal|correlation|dxy|dollar/)){
+    return '🥇 <b style="color:var(--gold)">Trading GOLD with ICT</b><br><br>'
+      +'<b>Key correlations:</b><br>'
+      +'📉 DXY up → Gold DOWN (inverse)<br>'
+      +'📉 US yields up → Gold DOWN<br>'
+      +'📈 Risk-off / fear → Gold UP<br>'
+      +'📈 USD weakens → Gold UP<br><br>'
+      +'<b>Gold-specific rules:</b><br>'
+      +'• ADR (Average Daily Range): 15–25 USD<br>'
+      +'• Round numbers ($2300, $2350) act as magnets<br>'
+      +'• London Open sets the daily direction 65% of the time<br>'
+      +'• NFP (first Friday of month) → avoid trading 30min before/after<br>'
+      +'• FOMC meetings → extreme volatility, widen stops or sit out<br>'
+      +'• Gold respects 1H FVGs very well — 68% fill rate within 24 hours<br><br>'
+      +(price?'Current price: <b style="color:var(--gold)">'+price+'</b>':'Start the bot to see live Gold price.');
+  }
+
+  // Risk management
+  if(q.match(/risk|money management|lot size|drawdown|how much|position size/)){
+    return '💰 <b style="color:var(--gold)">ICT Risk Management Rules</b><br><br>'
+      +'<b>Core rules:</b><br>'
+      +'1. Never risk more than <b>1-2%</b> per trade<br>'
+      +'2. Stop trading at <b>5% daily drawdown</b><br>'
+      +'3. Minimum <b>1:2 RR</b> — prefer 1:3+<br>'
+      +'4. After 3 losses in a row → stop for the day<br>'
+      +'5. Never average down into losers<br><br>'
+      +'<b>Bot mode risk settings:</b><br>'
+      +'⚡ Aggressive: 0.5% risk, 1.5:1 RR, many signals<br>'
+      +'📊 Normal: 1% risk, 3:1 RR, standard ICT<br>'
+      +'🎯 Sniper: 1.5% risk, 5:1 RR, rare but powerful<br><br>'
+      +'<b>Current settings:</b> '+C.risk+'% risk | '+mp.rr+':1 RR | Max DD: '+C.dd+'%<br><br>'
+      +'<b>Lot size formula:</b><br>'
+      +'(Balance × Risk%) ÷ (SL points × $10) = lot size';
+  }
+
+  // Bot status / how is it doing
+  if(q.match(/bot|status|running|how|working|active/)){
+    return '🤖 <b style="color:var(--gold)">Bot Status</b><br><br>'
+      +'Status: <b style="color:'+(running?'var(--green)':'var(--red)')+'">'+(running?'🟢 RUNNING':'⏹ STOPPED')+'</b><br>'
+      +'Mode: <b>'+mp.label+'</b> ('+mp.tf+')<br>'
+      +'Symbol: <b>'+C.symbol+'</b><br>'
+      +'Balance: <b>'+(bal>0?cur(bal.toFixed(2)):'—')+'</b><br>'
+      +'Open trades: <b>'+openTrades.length+'</b><br>'
+      +'Required score: <b>'+mp.minScore+'/7</b><br><br>'
+      +(analysis?'Last analysis score: <b>'+analysis.score+'/7</b>':'Start the bot to begin live analysis.');
+  }
+
+  // Greeting
+  if(q.match(/hello|hi|hey|good morning|good evening|sup/)){
+    return '👋 Hello! I am your built-in <b style="color:var(--gold)">ICT AI Analyst</b>, fully loaded with ICT trading knowledge — no API key needed.<br><br>'
+      +'I can help you with:<br>'
+      +'• 📐 Market structure analysis<br>'
+      +'• 📊 FVGs, Order Blocks, Liquidity<br>'
+      +'• 🕐 Kill zones and session timing<br>'
+      +'• 🎯 OTE and entry techniques<br>'
+      +'• 💰 Risk management<br>'
+      +'• 🥇 Gold-specific insights<br><br>'
+      +'What would you like to know?';
+  }
+
+  // Default — intelligent fallback using live data
+  if(analysis&&price){
+    return '🤖 <b style="color:var(--gold)">ICT Analysis</b> for "'+msg.substring(0,40)+'"<br><br>'
+      +'Based on current market data:<br>'
+      +'Price: <b>'+price+'</b> | Bias: <b>'+analysis.bias+'</b> | Score: <b>'+analysis.score+'/7</b><br><br>'
+      +'Try asking about: <b>Market Structure</b>, <b>FVG</b>, <b>Order Blocks</b>, <b>Kill Zones</b>, <b>Liquidity</b>, <b>OTE</b>, <b>Current Signal</b>, or <b>Risk Management</b>.';
+  }
+
+  return '🤖 Your built-in ICT analyst. Ask me about: Ask me about:<br>'
+    +'<b>Market Structure</b> • <b>FVG</b> • <b>Order Blocks</b> • <b>Kill Zones</b> • <b>Liquidity</b> • <b>OTE</b> • <b>Gold Tips</b> • <b>Risk Management</b> • <b>Current Signal</b>';
+}
+
+// AI input — send on Enter (not Shift+Enter)
+var aiTxt=G('aiText');
+if(aiTxt){
+  aiTxt.addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAI();}
+  });
+  // Auto-resize
+  aiTxt.addEventListener('input',function(){
+    this.style.height='auto';
+    this.style.height=Math.min(this.scrollHeight,100)+'px';
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+//  ICT EDUCATION — Comprehensive ICT knowledge base
+// ════════════════════════════════════════════════════════════
+
+var ICT_KNOWLEDGE=[
+  {title:'📊 Fair Value Gap (FVG)',
+   short:'A 3-candle pattern where price leaves an imbalance — a gap between candle 1 high and candle 3 low (bullish FVG) or candle 1 low and candle 3 high (bearish FVG).',
+   detail:'<b>How to trade:</b> Price tends to return to fill FVGs before continuing in the original direction. In a bullish trend, look for price to pull back into a bullish FVG and hold — enter long. In a bearish trend, look for price to rally into a bearish FVG and hold — enter short.<br><br><b>Bot implementation:</b> The bot scans the last 100 candles for unmitigated FVGs and checks if the current price is inside one during entry.'},
+
+  {title:'🧱 Order Block (OB)',
+   short:'The last opposing candle before a significant move. A bullish OB is the last bearish candle before a bullish expansion. These zones act as institutional supply/demand areas.',
+   detail:'<b>How to trade:</b> Price often returns to an order block before continuing the trend. A bullish OB at a key level with confluence = high-probability long. The wick into the OB is your entry, the low of the OB is your stop loss.<br><br><b>Bot implementation:</b> Detects OBs by looking for a bearish candle followed by a gap-up (bull OB) or a bullish candle followed by a gap-down (bear OB). Scores by expansion strength.'},
+
+  {title:'🔀 Market Structure Shift (MSS)',
+   short:'When price breaks a significant swing high or low, indicating a change in trend direction. Two types: BOS (Break of Structure = continuation) and CHoCH (Change of Character = reversal).',
+   detail:'<b>BOS:</b> Price breaks the most recent swing high in an uptrend — trend continues bullish. Confirms you should be looking for longs.<br><br><b>CHoCH:</b> Price breaks a swing low in what was an uptrend — first sign of reversal. Wait for confirmation before trading the reversal.<br><br><b>Bot implementation:</b> Detects by comparing current price to last two swing highs/lows. Labels each break as BOS or CHoCH for context.'},
+
+  {title:'💧 Liquidity & Sweeps',
+   short:'Retail stop losses cluster above swing highs (sell-side liquidity) and below swing lows (buy-side liquidity). Smart money sweeps these levels before the real move.',
+   detail:'<b>Equal highs/lows:</b> Price that touches a level twice creates obvious stop clusters — institutions target these.<br><br><b>Sweep signal:</b> Price wicks above a swing high then closes back below = sell-side liquidity swept = look for shorts. Price wicks below a swing low then closes back above = buy-side liquidity swept = look for longs.<br><br><b>Bot implementation:</b> Checks if the last candle wick exceeds a swing level but closes back through it — high-probability reversal signal.'},
+
+  {title:'🕐 Kill Zones (Trading Sessions)',
+   short:'Specific high-probability time windows when institutional orders are executed. GOLD is most active during London Open (09:00-12:00 SAST) and NY Open (14:00-17:00 SAST).',
+   detail:'<b>London Open (07:00-10:00 UTC | 09:00-12:00 SAST):</b> Highest probability. London sets the daily range direction. Look for manipulation of the Asian range followed by the true move.<br><br><b>NY Open (12:00-15:00 UTC | 14:00-17:00 SAST):</b> Second highest. Often continues or reverses the London move. The first 30 minutes are most volatile.<br><br><b>Asian Range (23:00-02:00 UTC):</b> Low volatility range-building. Often manipulated at London open.'},
+
+  {title:'🎯 OTE — Optimal Trade Entry',
+   short:'The ideal entry zone within a retracement — specifically the 61.8% to 79% Fibonacci level of the last significant move.',
+   detail:'<b>How it works:</b> After a strong move up, price retraces. The OTE zone (61.8%-79% retrace) is where institutions add to positions before the next leg higher.<br><br><b>Calculation:</b> Swing high to swing low = range. OTE = swing low + (range × 0.618) to swing low + (range × 0.79) for buys. Reverse for sells.<br><br><b>Why it works:</b> This zone coincides with institutional order flow. Retail traders use 50% retracements — institutions use 61.8-79% to get better prices than retail.'},
+
+  {title:'⚖️ Premium & Discount Zones',
+   short:'The range between a swing high and swing low is divided into premium (above 50%) and discount (below 50%). Buy in discount, sell in premium.',
+   detail:'<b>Key principle:</b> Never buy when price is in premium (expensive). Never sell when price is in discount (cheap).<br><br><b>50% level (Equilibrium):</b> The midpoint of the range. Price often reacts here. Use as a filter — only long below equilibrium, only short above it.<br><br><b>Bot implementation:</b> The bot checks whether current price is in discount (for buys) or premium (for sells) and will only take signals that align with this principle.'},
+
+  {title:'📡 HTF Bias — Higher Timeframe Analysis',
+   short:'The overall directional bias determined by the higher timeframe (H4/Daily). All trades should align with the HTF bias for maximum probability.',
+   detail:'<b>Top-down analysis:</b> Daily → H4 → H1 → M15. Identify the trend on higher timeframes first, then zoom in to find entries in the direction of that trend.<br><br><b>Never fight HTF:</b> If H4 is bearish, only take short signals on H1. Going counter-trend requires 6+ confluence factors.<br><br><b>Bot implementation:</b> Calculates HTF bias by comparing the current candle close vs the close 20 bars ago. If higher = bullish bias. If lower = bearish bias.'},
+
+  {title:'⚡ Power of 3 (AMD)',
+   short:'Accumulation → Manipulation → Distribution. The three-phase market cycle that repeats on every timeframe.',
+   detail:'<b>Accumulation:</b> Smart money quietly builds positions. Price consolidates in a range. This happens during Asian session for GOLD.<br><br><b>Manipulation:</b> A fake move in the wrong direction to hunt retail stop losses. London open often creates a false break of the Asian range before the real move.<br><br><b>Distribution:</b> The real directional move. Smart money distributes (sells) their positions to retail traders who enter too late. This is the NY session continuation.<br><br><b>Trading tip:</b> When you see the manipulation (false break), that\'s your entry signal for the distribution phase.'},
+
+  {title:'📐 IPDA — Interbank Price Delivery',
+   short:'The algorithm that drives price to liquidity pools at specific time intervals (20, 40, 60 candle cycles) before delivering the next leg of the move.',
+   detail:'<b>Key concept:</b> Price doesn\'t move randomly — it\'s algorithmically delivered from one liquidity pool to another.<br><br><b>IPDA look-back:</b> Price seeks out the highs/lows from the last 20, 40, or 60 candles before making its next move. These are the targets for price delivery.<br><br><b>Practical use:</b> Identify the swing high from 20 candles ago — if price is bullish, that\'s a likely target. The bot uses swing detection to identify these key levels.'},
+
+  {title:'🏛️ ICT Concepts — Risk Management',
+   short:'ICT trading requires strict risk management. Never risk more than 1-2% per trade. Use the model\'s confluence score to size positions.',
+   detail:'<b>Position sizing:</b> Risk amount ÷ (stop loss in points × point value) = lot size. Never deviate from this formula.<br><br><b>Bot modes:</b><br>⚡ Aggressive: 0.5% risk, 1.5:1 RR — quick trades<br>📊 Normal: 1% risk, 3:1 RR — standard ICT<br>🎯 Sniper: 1.5% risk, 5:1 RR — swing trades<br><br><b>Daily loss limit:</b> Stop trading when you hit 5% daily drawdown. Protect the account at all costs. <b>One bad day should never destroy your week.</b>'},
+
+  {title:'🌊 Displacement',
+   short:'A large, aggressive candle (or sequence of candles) that leaves an imbalance (FVG) in price action — the fingerprint of institutional order flow.',
+   detail:'<b>What it looks like:</b> A big bullish or bearish candle with a large body, minimal wicks, that closes near its high/low. This is a bank order being executed.<br><br><b>Why it matters:</b> Displacement creates FVGs and shifts market structure. It\'s the clearest evidence of where institutions are positioned.<br><br><b>Trading rule:</b> Only enter in the direction of displacement. If you see a 50+ point bullish displacement candle, that\'s your bias — look for longs only until the next major level is reached.'}
+];
+
+function renderEdu(){
+  var el=G('eduList'); if(!el) return;
+  el.innerHTML=''; // always render fresh
+  ICT_KNOWLEDGE.forEach(function(item,idx){
+    var card=document.createElement('div');
+    card.className='edu-card';
+    card.innerHTML='<h3>'+item.title+'</h3><p id="edu-short-'+idx+'">'+item.short+'</p>'
+      +'<div class="edu-expand" id="edu-detail-'+idx+'">'+item.detail+'</div>'
+      +'<div style="font-size:.65rem;color:var(--gold);margin-top:6px" id="edu-toggle-'+idx+'">▼ Read more</div>';
+    card.addEventListener('click',function(){
+      var d=G('edu-detail-'+idx),t=G('edu-toggle-'+idx);
+      if(d.style.display==='block'){
+        d.style.display='none';t.textContent='▼ Read more';card.classList.remove('open');
+      }else{
+        d.style.display='block';t.textContent='▲ Read less';card.classList.add('open');
+      }
+    });
+    el.appendChild(card);
+  });
+}
+</script>
+<script src="/ict_knowledge.js"></script>
+<script src="/ict_data.js"></script>
+<script src="/ict_history.js"></script>
+<script src="/ict_education.js"></script>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  SERVER ENGINE STATUS POLLER
+//  Polls the bot-engine Netlify function every 60s to show
+//  live status on the dashboard even when bot is running
+//  server-side (independent of Start/Stop buttons)
+// ════════════════════════════════════════════════════════════
+
+async function pollServerStatus() {
+  try {
+    var r = await fetch('/.netlify/functions/bot-engine', { method: 'GET' });
+    if (!r.ok) return;
+    var d = await r.json();
+    if (!d || (!d.lastRun && !d.status)) return;
+
+    // Show the server card
+    var card = G('serverCard');
+    if (card) card.style.display = 'block';
+
+    // Last run time
+    var lastRun = G('svLastRun');
+    if (lastRun && d.lastRun) {
+      var ago = Math.round((Date.now() - new Date(d.lastRun).getTime()) / 60000);
+      lastRun.textContent = ago < 1 ? 'Just now' : ago + 'm ago';
+    }
+
+    // Status
+    var svStatus = G('svStatus');
+    if (svStatus) {
+      var statusMap = {
+        'ok': '🟢 Active', 'trade_placed': '🟢 Trade!',
+        'paused': '🟡 Paused', 'error': '🔴 Error',
+        'disabled': '⚫ Disabled', 'no_signal': '🟢 Scanning'
+      };
+      svStatus.textContent = statusMap[d.status] || d.status || '—';
+    }
+
+    // Last signal
+    var svSig = G('svLastSignal');
+    if (svSig && d.lastSignal) {
+      var s = d.lastSignal;
+      svSig.innerHTML = (s.dir==='buy'?'🟢 BUY':'🔴 SELL')
+        + ' | Entry: <b>' + s.entry + '</b>'
+        + ' | SL: <b style="color:var(--red)">' + s.sl + '</b>'
+        + ' | TP: <b style="color:var(--green)">' + s.tp + '</b>'
+        + ' | Score: <b>' + s.score + '/10</b>';
+    } else if (svSig && d.analysis) {
+      svSig.textContent = 'Score: ' + d.analysis.score + '/10 | '
+        + 'MSS: ' + d.analysis.mss.dir + ' | Bias: ' + d.analysis.bias;
+    }
+
+    // Update balance from server state if it has it
+    if (d.bal && !running) {
+      if (G('elBal')) G('elBal').textContent = (C.currency||'R') + parseFloat(d.bal).toFixed(2);
+      if (G('elEq')  && d.eq) G('elEq').textContent  = (C.currency||'R') + parseFloat(d.eq).toFixed(2);
+    }
+
+  } catch(e) {
+    // Server engine not deployed yet — hide card silently
+    var card = G('serverCard');
+    if (card) card.style.display = 'none';
+  }
+}
+
+// Poll on load and every 60 seconds
+pollServerStatus();
+setInterval(pollServerStatus, 60000);
+</script>
+
+</body>
+</html>
